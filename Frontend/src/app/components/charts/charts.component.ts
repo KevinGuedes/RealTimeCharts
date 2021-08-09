@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as DShape from 'd3-shape';
+import { SignalrService } from 'src/app/services/signalr.service';
 
 @Component({
   selector: 'app-charts',
@@ -32,7 +33,14 @@ export class ChartsComponent implements OnInit {
   colorSchemePolar = {
     domain: ['#aae3f5']
   };
-  constructor() { }
+  constructor(
+    private readonly _signalrService: SignalrService,
+  ) {
+    this._signalrService.heartDataReceived.subscribe(data => {
+      console.log(data, "recebido");
+      this.teste()
+    })
+  }
 
   ngOnInit(): void {
   }
@@ -83,6 +91,10 @@ export class ChartsComponent implements OnInit {
     this.data[0].series.push(data[this.currentX]),
       this.data = [...this.data];
     this.currentX++;
+  }
+
+  public teste2(): void {
+    this._signalrService.sendNewMessage()
   }
 
 }

@@ -1,11 +1,33 @@
-<ngx-charts-line-chart [view]="view" [legend]="legend" [animations]="true" [scheme]="colorSchemeLine" [xAxis]="xAxis"
-    [yAxis]="xAxis" [curve]="curve" [maxXAxisTickLength]="100" [xScaleMin]="0" [xScaleMax]="360" [yScaleMin]="0"
-    [yScaleMax]="3.5" [trimXAxisTicks]="true" [trimYAxisTicks]="true" [results]="data" [autoScale]="false">
+<ngx-charts-line-chart 
+    [view]="view" 
+    [legend]="legend"
+    [animations]="true" 
+    [scheme]="colorSchemeLine"
+    [xAxis]="xAxis"
+    [yAxis]="xAxis" 
+    [curve]="curve"
+    [maxXAxisTickLength]="100" 
+    [xScaleMin]="0" 
+    [xScaleMax]="360" 
+    [yScaleMin]="0"
+    [yScaleMax]="3.5"
+    [trimXAxisTicks]="true" 
+    [trimYAxisTicks]="true" 
+    [results]="data" 
+    [autoScale]="false">
 </ngx-charts-line-chart>
 
-<ngx-charts-polar-chart [view]="view" [scheme]="colorSchemePolar" [legend]="legend" [showXAxisLabel]="showXAxisLabel"
-    [showYAxisLabel]="showYAxisLabel" [xAxis]="xAxis" [yAxis]="yAxis" [xAxisLabel]="xAxisLabel"
-    [yAxisLabel]="yAxisLabel" [results]="data" [autoScale]="false">
+<ngx-charts-polar-chart 
+    [view]="view" 
+    [scheme]="colorSchemePolar" 
+    [legend]="legend" 
+    [showXAxisLabel]="showXAxisLabel"
+    [xAxis]="xAxis" 
+    [yAxis]="yAxis" 
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel" 
+    [results]="data" 
+    [autoScale]="false">
 </ngx-charts-polar-chart>
 
 
@@ -17,3 +39,4 @@
 </ngx-charts-line-chart> -->
 
 <button (click)="teste()">Add Data</button>
+<button (click)="teste2()">SignalR</button>
