@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using OperationResult;
 using RealTimeCharts.Domain.Interfaces;
+using RealTimeCharts.Domain.Models;
 using RealTimeCharts.Microservices.DataProvider.Events;
+using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Shared.Handlers;
-using RealTimeCharts.Shared.Structs;
+using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace RealTimeCharts.Microservices.DataProvider.Handlers
@@ -12,28 +15,42 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
     {
         private readonly IEventBus _eventBus;
         private readonly ILogger<GenerateHeartDataEventHandler> _logger;
+        private readonly IDataGenerator _dataGenerator;
 
-        public GenerateHeartDataEventHandler(IEventBus eventBus, ILogger<GenerateHeartDataEventHandler> logger)
+        public GenerateHeartDataEventHandler(IEventBus eventBus, ILogger<GenerateHeartDataEventHandler> logger, IDataGenerator dataGenerator)
         {
             _eventBus = eventBus;
             _logger = logger;
+            _dataGenerator = dataGenerator;
         }
 
         public Result Handle(GenerateHeartDataEvent @event)
         {
-            _logger.LogInformation("Generating heart function data points");
-
-
-            for(int i = 0; i < @event.DataPoints; i++)
+            try
             {
-                var x = new DataPoint(3, 2);
-                _logger.LogInformation($"Publishing heart data generated event {x} to dispatcher");
-                _eventBus.Publish(new HeartDataGeneratedEvent(x));
-                Thread.Sleep(1000);
-            }
+                _logger.LogInformation("Generating heart data points");
 
-            _logger.LogInformation("Heart data successfully generated");
-            return Result.Success();
+                for (int i = 0; i <= @event.Max; i += @event.Step)
+                {
+                    var dataPoint = _dataGenerator.GenerateHeartData(Convert.ToDouble(i));
+
+                    using (_logger.BeginScope(new Dictionary<string, string>() { ["DataPoint"] = dataPoint.ToString() }))
+                    {
+                        _logger.LogInformation($"Publishing heart data generated event to dispatcher");
+                        _eventBus.Publish(new HeartDataGeneratedEvent(dataPoint));
+                    }
+
+                    Thread.Sleep(500);
+                }
+
+                _logger.LogInformation("Heart data successfully generated");
+                return Result.Success();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+                return Result.Error(ex);
+            }
         }
     }
 }

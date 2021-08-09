@@ -15,10 +15,10 @@ namespace RealTimeCharts.Presentation.Api.Controllers
             => _logger = logger;
 
         [HttpPost("heart")]
-        public async Task<IActionResult> GenerateHeartEquationData([FromQuery] int dataPoints, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateHeartEquationData([FromQuery] int max, [FromQuery] int step, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Generate Heart Data endpoint accessed");
-            return await SendCommand(new GenerateHeartDataCommand(dataPoints), cancellationToken);
+            return await SendCommand(new GenerateHeartDataCommand(max, step), cancellationToken);
         }
     }
 }

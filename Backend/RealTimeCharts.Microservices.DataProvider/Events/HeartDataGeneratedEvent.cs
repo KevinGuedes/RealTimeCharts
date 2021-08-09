@@ -1,5 +1,5 @@
 ﻿using PaymentContext.Shared.Events;
-using RealTimeCharts.Shared.Structs;
+using RealTimeCharts.Domain.Models;
 
 namespace RealTimeCharts.Microservices.DataProvider.Events
 {

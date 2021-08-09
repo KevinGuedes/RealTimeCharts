@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using RealTimeCharts.Domain.Models;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
-using RealTimeCharts.Shared.Structs;
 using System.Threading.Tasks;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Services
@@ -20,7 +21,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Services
         public async Task DispatchHeartData(DataPoint dataPoint)
         {
             _logger.LogInformation($"Dispatching heart data point {dataPoint} to client");
-            await _hubConnection.InvokeAsync("HeartData", dataPoint.ToString());
+            await _hubConnection.InvokeAsync("HeartData", JsonConvert.SerializeObject(dataPoint, Formatting.Indented));
         }
     }
 }

@@ -5,11 +5,13 @@ namespace RealTimeCharts.Domain.Commands
 {
     public class GenerateHeartDataCommand : IRequest<Result>
     {
-        public GenerateHeartDataCommand(int dataPoints)
+        public GenerateHeartDataCommand(int max, int step)
         {
-            DataPoints = dataPoints;
+            Max = max;
+            Step = step;
         }
 
-        public int DataPoints { get; set; }
+        public int Max { get; set; }
+        public int Step { get; set; }
     }
 }

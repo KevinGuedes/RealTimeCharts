@@ -23,7 +23,7 @@ namespace RealTimeCharts.Application.Heart
         public Task<Result> Handle(GenerateHeartDataCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Heart data generation started");
-            _eventBus.Publish(new GenerateHeartDataEvent(request.DataPoints));
+            _eventBus.Publish(new GenerateHeartDataEvent(request.Max, request.Step));
             return Result.Success();
         }
     }

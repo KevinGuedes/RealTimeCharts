@@ -20,7 +20,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
 
         public Result Handle(HeartDataGeneratedEvent @event)
         {
-            _logger.LogInformation("recebido");
+            _logger.LogInformation($"Dispatching {@event.DataPoint.ToString()} heart data point to client");
             _dispatcherService.DispatchHeartData(@event.DataPoint);
             return Result.Success();
         }
