@@ -10,6 +10,7 @@ export class SignalrService {
   private _isConnected: boolean = false;
   private readonly _hubConnection: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl('https://localhost:6001/data')
+    .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
     .build();
 
   constructor() {
@@ -29,7 +30,7 @@ export class SignalrService {
 
   private onHeartDataReceived(): void {
     this._hubConnection.on("HeartData", (data: string) => {
-      this.heartDataReceived.emit(data);
+      this.heartDataReceived.emit(JSON.parse(data));
     })
   }
 

@@ -22,7 +22,6 @@
     [scheme]="colorSchemePolar" 
     [legend]="legend" 
     [showXAxisLabel]="showXAxisLabel"
-    [xAxis]="xAxis" 
     [yAxis]="yAxis" 
     [xAxisLabel]="xAxisLabel"
     [yAxisLabel]="yAxisLabel" 
@@ -38,5 +37,5 @@
   (activate)="onActivate($event)" [autoScale]="true" (deactivate)="onDeactivate($event)">
 </ngx-charts-line-chart> -->
 
-<button (click)="teste()">Add Data</button>
-<button (click)="teste2()">SignalR</button>
+<button mat-raised-button color="primary"(click)="fetchHeartData()">Fetch Heart Data</button>
+<button mat-stroked-button color="primary" (click)="clearChart()">Cleart Chart</button>

@@ -1,6 +1,7 @@
 
 import { ChartsComponent } from './components/charts/charts.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { HeaderComponent } from './components/header/header.component';
 
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -10,8 +11,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { HeaderComponent } from './components/header/header.component';
-
+import { MatButtonModule } from '@angular/material/button';
 @NgModule({
   declarations: [
     AppComponent,
@@ -25,7 +25,8 @@ import { HeaderComponent } from './components/header/header.component';
     BrowserAnimationsModule,
     MatIconModule,
     MatToolbarModule,
-    NgxChartsModule
+    NgxChartsModule,
+    MatButtonModule
   ],
   providers: [],
   bootstrap: [AppComponent]
