@@ -25,8 +25,10 @@ namespace RealTimeCharts.Presentation.Api
             services.AddMediatRToAssemblies(new Assembly[] { 
                Assembly.GetExecutingAssembly()
             });
+            services.ConfigureValidators();
 
             services.AddControllers();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "RealTimeCharts.Presentation.Api", Version = "v1" });

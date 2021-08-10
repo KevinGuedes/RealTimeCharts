@@ -4,6 +4,7 @@ import { Observable, throwError } from "rxjs";
 import { catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { DataPoint } from 'src/app/models/data-point.model';
+import { GenerateHeartDataRequest } from './requests/generate-heart-data.request';
 
 @Injectable({
   providedIn: 'root'
@@ -16,8 +17,8 @@ export class DataService {
     private _http: HttpClient,
   ) { }
 
-  public generateHeartData(): Promise<void> {
-    return this._http.get<DataPoint[]>(`${this._apiUrl}/heart`).pipe(
+  public generateHeartData(max: number, step: number): Promise<void> {
+    return this._http.post<GenerateHeartDataRequest>(`${this._apiUrl}/heart`, new GenerateHeartDataRequest(max, step)).pipe(
       map(c => c),
       catchError(error => this.errorHandler(error))
     ).toPromise();

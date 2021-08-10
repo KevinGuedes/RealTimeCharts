@@ -1,5 +1,7 @@
-﻿using MediatR;
+﻿using FluentValidation.AspNetCore;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using RealTimeCharts.Application.Heart.Validators;
 using RealTimeCharts.Domain.Interfaces;
 using RealTimeCharts.Infra.Bus;
 using System;
@@ -21,5 +23,8 @@ namespace RealTimeCharts.Infra.IoC
 
         public static void AddMediatRToAppHandlers(this IServiceCollection services)
             => services.AddMediatR(AppDomain.CurrentDomain.Load("RealTimeCharts.Application"));
+
+        public static void ConfigureValidators(this IServiceCollection services)
+            => services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<GenerateHeartDataRequestValidator>());
     }
 }

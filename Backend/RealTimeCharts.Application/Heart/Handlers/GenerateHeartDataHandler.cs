@@ -1,15 +1,15 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using OperationResult;
-using RealTimeCharts.Domain.Commands;
+using RealTimeCharts.Application.Heart.Requests;
 using RealTimeCharts.Domain.Events;
 using RealTimeCharts.Domain.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RealTimeCharts.Application.Heart
+namespace RealTimeCharts.Application.Heart.Handlers
 {
-    public class GenerateHeartDataHandler : IRequestHandler<GenerateHeartDataCommand, Result>
+    public class GenerateHeartDataHandler : IRequestHandler<GenerateHeartDataRequest, Result>
     {
         private readonly IEventBus _eventBus;
         private readonly ILogger<GenerateHeartDataHandler> _logger;
@@ -20,7 +20,7 @@ namespace RealTimeCharts.Application.Heart
             _logger = logger;
         }
 
-        public Task<Result> Handle(GenerateHeartDataCommand request, CancellationToken cancellationToken)
+        public Task<Result> Handle(GenerateHeartDataRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Heart data generation started");
             _eventBus.Publish(new GenerateHeartDataEvent(request.Max, request.Step));

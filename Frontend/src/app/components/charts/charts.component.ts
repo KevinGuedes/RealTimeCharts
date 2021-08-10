@@ -20,7 +20,7 @@ export class ChartsComponent implements OnInit {
   public showXAxisLabel: boolean = true;
   public xAxisLabel: string = 'Year';
   public yAxisLabel: string = 'Population';
-  public curve: any = DShape.curveBasis;
+  public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5', '#a8385d', '#aae3f5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
   public showFetchMessage: boolean = false;
@@ -37,21 +37,21 @@ export class ChartsComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  onSelect(data: any): void {
+  public onSelect(data: any): void {
     console.log('Item clicked', JSON.parse(JSON.stringify(data)));
   }
 
-  onActivate(data: any): void {
+  public onActivate(data: any): void {
     console.log('Activate', JSON.parse(JSON.stringify(data)));
   }
 
-  onDeactivate(data: any): void {
+  public onDeactivate(data: any): void {
     console.log('Deactivate', JSON.parse(JSON.stringify(data)));
   }
 
-  public async fetchHeartData(): Promise<void> {
+  public async generateHeartData(): Promise<void> {
     this.showFetchMessage = true;
-    await this._dataService.generateHeartData()
+    await this._dataService.generateHeartData(20, 10)
       .then(() => {
         console.log("Generating heart data")
       })
