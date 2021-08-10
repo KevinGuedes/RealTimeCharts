@@ -28,7 +28,7 @@ namespace RealTimeCharts.Presentation.Api.Controllers
             => await _mediator.Send(command, cancellationToken) switch
             {
                 (true, var result) => Ok(result),
-                (_, _, var error) => BadRequest(error.Message)
+                (_, _, var error) => BadRequest(error)
             };
     }
 }

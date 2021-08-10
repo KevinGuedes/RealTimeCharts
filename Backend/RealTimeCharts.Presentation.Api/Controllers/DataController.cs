@@ -19,13 +19,12 @@ namespace RealTimeCharts.Presentation.Api.Controllers
         [HttpPost("heart")]
         public async Task<IActionResult> GenerateHeartData([FromBody] GenerateHeartDataRequest generateHeartDataRequest, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
-            {
-                _logger.LogInformation("Generate Heart Data endpoint accessed");
-                return await SendCommand(generateHeartDataRequest, cancellationToken);
-            }
+            _logger.LogInformation("Generate Heart Data endpoint accessed");
+            
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return BadRequest(ModelState);
+            return await SendCommand(generateHeartDataRequest, cancellationToken);
         }
     }
 }
