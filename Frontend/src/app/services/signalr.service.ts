@@ -1,5 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -7,15 +8,20 @@ import * as signalR from '@microsoft/signalr';
 export class SignalrService {
 
   public heartDataReceived: EventEmitter<any> = new EventEmitter();
+
   private _isConnected: boolean = false;
+  private _hubUrl: string = environment.dataHubUrl;
+
   private readonly _hubConnection: signalR.HubConnection = new signalR.HubConnectionBuilder()
-    .withUrl('https://localhost:6001/data')
+    .withUrl(this._hubUrl)
     .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
     .build();
 
   constructor() {
     this.startConnection();
+
     this.onHeartDataReceived();
+
     this._hubConnection.onclose(async () => {
       this._isConnected = false;
       await this.startConnection();

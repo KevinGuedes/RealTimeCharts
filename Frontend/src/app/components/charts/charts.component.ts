@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as DShape from 'd3-shape';
+import { DataService } from 'src/app/services/data.service';
 import { SignalrService } from 'src/app/services/signalr.service';
 
 @Component({
@@ -8,23 +9,25 @@ import { SignalrService } from 'src/app/services/signalr.service';
   styleUrls: ['./charts.component.scss']
 })
 export class ChartsComponent implements OnInit {
-  data: any[] = [{ name: "Heart", series: [/*{ "name": 0, "value": 0 }*/] }];
-  view: [number, number] = [700, 300];
-  legend: boolean = true;
-  showLabels: boolean = true;
-  animations: boolean = true;
-  xAxis: boolean = true;
-  yAxis: boolean = true;
-  showYAxisLabel: boolean = true;
-  showXAxisLabel: boolean = true;
-  xAxisLabel: string = 'Year';
-  yAxisLabel: string = 'Population';
-  curve: any = DShape.curveBasis;
-  colorSchemeLine = { domain: ['#7aa3e5', '#a8385d', '#aae3f5'] };
-  colorSchemePolar = { domain: ['#aae3f5'] };
+  public data: any[] = [{ name: "Heart", series: [] }];
+  public view: [number, number] = [700, 300];
+  public legend: boolean = true;
+  public showLabels: boolean = true;
+  public animations: boolean = true;
+  public xAxis: boolean = true;
+  public yAxis: boolean = true;
+  public showYAxisLabel: boolean = true;
+  public showXAxisLabel: boolean = true;
+  public xAxisLabel: string = 'Year';
+  public yAxisLabel: string = 'Population';
+  public curve: any = DShape.curveBasis;
+  public colorSchemeLine = { domain: ['#7aa3e5', '#a8385d', '#aae3f5'] };
+  public colorSchemePolar = { domain: ['#aae3f5'] };
+  public showFetchMessage: boolean = false;
 
   constructor(
     private readonly _signalrService: SignalrService,
+    private readonly _dataService: DataService,
   ) {
     this._signalrService.heartDataReceived.subscribe(data => {
       this.pushData(data);
@@ -46,8 +49,13 @@ export class ChartsComponent implements OnInit {
     console.log('Deactivate', JSON.parse(JSON.stringify(data)));
   }
 
-  public fetchHeartData(): void {
-
+  public async fetchHeartData(): Promise<void> {
+    this.showFetchMessage = true;
+    await this._dataService.generateHeartData()
+      .then(() => {
+        console.log("Generating heart data")
+      })
+      .catch(error => console.error(error.message));
   }
 
   public clearChart(): void {

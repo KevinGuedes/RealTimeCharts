@@ -42,6 +42,12 @@ namespace RealTimeCharts.Presentation.Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RealTimeCharts.Presentation.Api v1"));
             }
 
+            app.UseCors(options => options
+                 .AllowAnyHeader()
+                 .AllowAnyMethod()
+                 .AllowCredentials()
+                 .WithOrigins("http://localhost:4200"));
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
