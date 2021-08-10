@@ -1,13 +1,37 @@
-<app-body>
-    <ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="true" [showXAxisLabel]="showXAxisLabel"
-      [showYAxisLabel]="showYAxisLabel" [animations]="true" [xAxis]="xAxis" [yAxis]="xAxis" [curve]="curve"
-      [maxXAxisTickLength]="5" [xScaleMin]="0" [xScaleMax]="360" [yScaleMin]="0" [yScaleMax]="3.5" [trimXAxisTicks]="true"
-      [trimYAxisTicks]="true" yAxisLabel="Value" [results]="data" [autoScale]="false">
+<app-body class="charts">
+  <section class="charts__linear-chart">
+    <ngx-charts-line-chart 
+      [results]="data" 
+      [view]="view" 
+      [scheme]="colorSchemeLine" 
+      [legend]="true" 
+      [showGridLines]="true"
+      [showRefLines]="true"
+      [showXAxisLabel]="showXAxisLabel"
+      [showYAxisLabel]="showYAxisLabel" 
+      [animations]="true" 
+      [xAxis]="xAxis" 
+      [yAxis]="xAxis" 
+      [curve]="curve"
+      [maxXAxisTickLength]="5" 
+      [xScaleMin]="0" 
+      [xScaleMax]="360" 
+      [yScaleMin]="0" 
+      [yScaleMax]="3.5" 
+      [trimXAxisTicks]="true"
+      [trimYAxisTicks]="true" 
+      yAxisLabel="Value" 
+      [autoScale]="false">
     </ngx-charts-line-chart>
-    
+  </section>
+   
+
+  <section class="charts__polar-chart">
     <ngx-charts-polar-chart [view]="view" [scheme]="colorSchemePolar" [legend]="true" [showXAxisLabel]="showXAxisLabel"
       [yAxis]="yAxis" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel" [results]="data" [autoScale]="false">
     </ngx-charts-polar-chart>
+  </section>
+    
     
     
     <!-- <ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="legend" [showXAxisLabel]="showXAxisLabel"
@@ -17,6 +41,8 @@
       (activate)="onActivate($event)" [autoScale]="false" (deactivate)="onDeactivate($event)">
     </ngx-charts-line-chart> -->
     
-    <button mat-raised-button color="primary" (click)="generateHeartData()">Fetch Heart Data</button>
+  <section class="charts__actions">
     <button mat-stroked-button color="primary" (click)="clearChart()">Cleart Chart</button>
+    <button mat-raised-button color="primary" (click)="generateHeartData()">Fetch Heart Data</button>
+  </section>
 </app-body>

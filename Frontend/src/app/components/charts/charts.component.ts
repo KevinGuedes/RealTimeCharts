@@ -51,7 +51,7 @@ export class ChartsComponent implements OnInit {
 
   public async generateHeartData(): Promise<void> {
     this.showFetchMessage = true;
-    await this._dataService.generateHeartData(20, 10)
+    await this._dataService.generateHeartData(360, 10)
       .then(() => {
         console.log("Generating heart data")
       })

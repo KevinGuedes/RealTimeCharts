@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http'
 import { MatCardModule } from '@angular/material/card';
 import { BodyComponent } from './components/body/body.component';
+import { MatDividerModule } from '@angular/material/divider';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { BodyComponent } from './components/body/body.component';
     NgxChartsModule,
     MatButtonModule,
     HttpClientModule,
-    MatCardModule
+    MatCardModule,
+    MatDividerModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

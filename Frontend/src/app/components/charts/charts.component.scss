@@ -1,0 +1,23 @@
+.charts {
+    &__linear-chart {
+        border: 1px solid green;
+    }
+
+    &__polar-chart {
+        margin-top: 1rem;
+        border: 1px solid blue;
+    }
+
+    &__actions {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        width: 300px;
+
+        & button {
+            width: 150px;
+        }
+    }
+}
