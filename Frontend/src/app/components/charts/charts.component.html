@@ -1,44 +1,22 @@
-<ngx-charts-line-chart 
-    [view]="view" 
-    [scheme]="colorSchemeLine"
-    [legend]="true"
-    [showXAxisLabel]="showXAxisLabel"
-    [showYAxisLabel]="showYAxisLabel"
-    [animations]="true" 
-    [xAxis]="xAxis"
-    [yAxis]="xAxis" 
-    [curve]="curve"
-    [maxXAxisTickLength]="5" 
-    [xScaleMin]="0" 
-    [xScaleMax]="360" 
-    [yScaleMin]="0"
-    [yScaleMax]="3.5"
-    [trimXAxisTicks]="true" 
-    [trimYAxisTicks]="true" 
-    yAxisLabel="Value"
-    [results]="data" 
-    [autoScale]="false">
-</ngx-charts-line-chart>
-
-<ngx-charts-polar-chart 
-    [view]="view" 
-    [scheme]="colorSchemePolar" 
-    [legend]="true" 
-    [showXAxisLabel]="showXAxisLabel"
-    [yAxis]="yAxis" 
-    [xAxisLabel]="xAxisLabel"
-    [yAxisLabel]="yAxisLabel" 
-    [results]="data" 
-    [autoScale]="false">
-</ngx-charts-polar-chart>
-
-
-<ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="legend" [showXAxisLabel]="showXAxisLabel"
-  [showYAxisLabel]="showYAxisLabel" [xAxis]="xAxis" [yAxis]="yAxis" [curve]="curve" [maxYAxisTickLength]="300"
-  [maxXAxisTickLength]="300" [xScaleMin]="0" [xScaleMax]="360" [trimXAxisTicks]="true" [trimYAxisTicks]="true"
-  [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel" [results]="data" (select)="onSelect($event)"
-  (activate)="onActivate($event)" [autoScale]="false" (deactivate)="onDeactivate($event)">
-</ngx-charts-line-chart>
-
-<button mat-raised-button color="primary"(click)="generateHeartData()">Fetch Heart Data</button>
-<button mat-stroked-button color="primary" (click)="clearChart()">Cleart Chart</button>
+<app-body>
+    <ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="true" [showXAxisLabel]="showXAxisLabel"
+      [showYAxisLabel]="showYAxisLabel" [animations]="true" [xAxis]="xAxis" [yAxis]="xAxis" [curve]="curve"
+      [maxXAxisTickLength]="5" [xScaleMin]="0" [xScaleMax]="360" [yScaleMin]="0" [yScaleMax]="3.5" [trimXAxisTicks]="true"
+      [trimYAxisTicks]="true" yAxisLabel="Value" [results]="data" [autoScale]="false">
+    </ngx-charts-line-chart>
+    
+    <ngx-charts-polar-chart [view]="view" [scheme]="colorSchemePolar" [legend]="true" [showXAxisLabel]="showXAxisLabel"
+      [yAxis]="yAxis" [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel" [results]="data" [autoScale]="false">
+    </ngx-charts-polar-chart>
+    
+    
+    <!-- <ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="legend" [showXAxisLabel]="showXAxisLabel"
+      [showYAxisLabel]="showYAxisLabel" [xAxis]="xAxis" [yAxis]="yAxis" [curve]="curve" [maxYAxisTickLength]="300"
+      [maxXAxisTickLength]="300" [xScaleMin]="0" [xScaleMax]="360" [trimXAxisTicks]="true" [trimYAxisTicks]="true"
+      [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel" [results]="data" (select)="onSelect($event)"
+      (activate)="onActivate($event)" [autoScale]="false" (deactivate)="onDeactivate($event)">
+    </ngx-charts-line-chart> -->
+    
+    <button mat-raised-button color="primary" (click)="generateHeartData()">Fetch Heart Data</button>
+    <button mat-stroked-button color="primary" (click)="clearChart()">Cleart Chart</button>
+</app-body>

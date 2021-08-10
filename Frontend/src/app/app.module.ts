@@ -13,12 +13,16 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http'
+import { MatCardModule } from '@angular/material/card';
+import { BodyComponent } from './components/body/body.component';
+
 @NgModule({
   declarations: [
     AppComponent,
     ChartsComponent,
     FooterComponent,
-    HeaderComponent
+    HeaderComponent,
+    BodyComponent
   ],
   imports: [
     BrowserModule,
@@ -28,7 +32,8 @@ import { HttpClientModule } from '@angular/common/http'
     MatToolbarModule,
     NgxChartsModule,
     MatButtonModule,
-    HttpClientModule
+    HttpClientModule,
+    MatCardModule
   ],
   providers: [],
   bootstrap: [AppComponent]

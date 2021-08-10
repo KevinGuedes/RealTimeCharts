@@ -21,7 +21,7 @@ export class ChartsComponent implements OnInit {
   public xAxisLabel: string = 'Year';
   public yAxisLabel: string = 'Population';
   public curve: DShape.CurveFactory = DShape.curveBasis;
-  public colorSchemeLine = { domain: ['#7aa3e5', '#a8385d', '#aae3f5'] };
+  public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
   public showFetchMessage: boolean = false;
 
