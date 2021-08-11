@@ -11,20 +11,12 @@ import { SignalrService } from 'src/app/services/signalr.service';
 export class ChartsComponent implements OnInit {
   public data: any[] = [{ name: "Heart", series: [] }];
   public view: [number, number] = [700, 300];
-  public legend: boolean = true;
-  public showLabels: boolean = true;
-  public animations: boolean = true;
-  public xAxis: boolean = true;
-  public yAxis: boolean = true;
-  public showYAxisLabel: boolean = true;
-  public showXAxisLabel: boolean = true;
-  public xAxisLabel: string = 'Year';
-  public yAxisLabel: string = 'Population';
   public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
   public showFetchMessage: boolean = false;
-
+  public legendTitle: string = 'Data';
+  public yLabelName: string = 'Value';
   constructor(
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
@@ -38,15 +30,15 @@ export class ChartsComponent implements OnInit {
   }
 
   public onSelect(data: any): void {
-    console.log('Item clicked', JSON.parse(JSON.stringify(data)));
+    console.log('Item clicked', data);
   }
 
   public onActivate(data: any): void {
-    console.log('Activate', JSON.parse(JSON.stringify(data)));
+    console.log('Activate', data);
   }
 
   public onDeactivate(data: any): void {
-    console.log('Deactivate', JSON.parse(JSON.stringify(data)));
+    console.log('Deactivate', data);
   }
 
   public async generateHeartData(): Promise<void> {
