@@ -1,4 +1,4 @@
-﻿using PaymentContext.Shared.Events;
+﻿using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Microservices.DataProvider.Events
 {

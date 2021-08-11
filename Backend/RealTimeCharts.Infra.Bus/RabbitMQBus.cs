@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using PaymentContext.Shared.Events;
+using RealTimeCharts.Shared.Events;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RealTimeCharts.Domain.Interfaces;

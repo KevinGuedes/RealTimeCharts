@@ -1,4 +1,4 @@
-﻿using PaymentContext.Shared.Events;
+﻿using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 
 namespace RealTimeCharts.Domain.Interfaces

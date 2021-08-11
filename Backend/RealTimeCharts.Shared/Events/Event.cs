@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PaymentContext.Shared.Events
+namespace RealTimeCharts.Shared.Events
 {
     public abstract class Event
     {

@@ -1,5 +1,5 @@
 ﻿using OperationResult;
-using PaymentContext.Shared.Events;
+using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Shared.Handlers
 {
