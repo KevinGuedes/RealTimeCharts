@@ -46,6 +46,9 @@
       [yAxisLabel]="yLabelName" 
       [legendTitle]="legendTitle" 
       [results]="data" 
+      (select)="onSelect($event)" 
+      (activate)="onActivate($event)" 
+      (deactivate)="onDeactivate($event)"
       [autoScale]="false">
     </ngx-charts-polar-chart>
   </section>
