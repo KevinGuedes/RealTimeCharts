@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as DShape from 'd3-shape';
 import { DataGenerationRate } from 'src/app/models/data-generation-rate.enum';
+import { DataType } from 'src/app/models/data-type.enum';
 import { DataService } from 'src/app/services/data.service';
 import { SignalrService } from 'src/app/services/signalr.service';
 
@@ -20,6 +21,7 @@ export class ChartsComponent implements OnInit {
   public legendTitle: string = 'Data';
   public yLabelName: string = 'Value';
   public dataCounter: number = 0;
+  public dataTypes!: DataType;
 
   constructor(
     private readonly _signalrService: SignalrService,
@@ -46,7 +48,7 @@ export class ChartsComponent implements OnInit {
     console.log('Deactivate', data);
   }
 
-  public async generateHeartData(): Promise<void> {
+  public async generateData(): Promise<void> {
 
     await this._dataService.generateHeartData(360, 10, DataGenerationRate.Medium)
       .then(() => {

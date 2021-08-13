@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using OperationResult;
-using RealTimeCharts.Domain.Enums;
 using RealTimeCharts.Domain.Interfaces;
-using RealTimeCharts.Domain.Models;
 using RealTimeCharts.Microservices.DataProvider.Events;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
+using RealTimeCharts.Shared.Enums;
 using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Collections.Generic;

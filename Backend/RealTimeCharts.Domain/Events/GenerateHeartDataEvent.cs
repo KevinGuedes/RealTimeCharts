@@ -1,4 +1,4 @@
-﻿using RealTimeCharts.Domain.Enums;
+﻿using RealTimeCharts.Shared.Enums;
 using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Domain.Events

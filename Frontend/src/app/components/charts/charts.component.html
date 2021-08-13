@@ -1,5 +1,33 @@
 <app-body class="charts">
 
+  <section class="charts__actions">
+    <!-- [formGroup]="categoryForm" -->
+    <form >
+      <mat-card-content>
+        <div>
+          <mat-form-field>
+            <mat-label>Data Type</mat-label>
+            <mat-select formControlName="typeId">
+              <!-- <mat-option *ngFor="let type of types" [value]="type.id" required></mat-option> -->
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field>
+            <mat-label>Generation Rate</mat-label>
+            <mat-select formControlName="typeId">
+              <!-- <mat-option *ngFor="let type of types" [value]="type.id" required></mat-option> -->
+            </mat-select>>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </form>
+
+
+    <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
+    <button mat-raised-button color="primary" (click)="generateData()">Generate Data</button>
+  </section>
+
   <section class="charts__linear-chart">
     <h1>Linear Chart</h1>
     <ngx-charts-line-chart 
@@ -60,9 +88,5 @@
     <p class="charts__data-counter__counter">{{dataCounter}}</p>
     <p class="charts__data-counter__text">Data point(s) received</p>
   </section>
-    
-  <section class="charts__actions">
-    <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
-    <button mat-raised-button color="primary" (click)="generateHeartData()">Fetch Heart Data</button>
-  </section>
+
 </app-body>

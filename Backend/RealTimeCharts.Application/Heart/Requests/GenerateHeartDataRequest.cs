@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using OperationResult;
-using RealTimeCharts.Domain.Enums;
+using RealTimeCharts.Shared.Enums;
 
 namespace RealTimeCharts.Application.Heart.Requests
 {
