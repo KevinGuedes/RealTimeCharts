@@ -1,6 +1,7 @@
 .charts {
     &__polar-chart,
-    &__linear-chart {
+    &__linear-chart,
+    &__form-container {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -27,16 +28,24 @@
         margin: 1rem 0;
     }
 
-    &__actions {
-        margin-top: 1rem;
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: center;
-        width: 300px;
+    &__form-container {
+        &__form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        & button {
-            width: 150px;
+        &__actions {
+            margin: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            width: 300px;
+
+            & button {
+                width: 150px;
+            }
         }
     }
 }

@@ -21,12 +21,19 @@ export class ChartsComponent implements OnInit {
   public legendTitle: string = 'Data';
   public yLabelName: string = 'Value';
   public dataCounter: number = 0;
-  public dataTypes!: DataType;
+
+  public dataTypes = DataType;
+  public dataTypeKeys!: any[];
+
+  public generationRate = DataGenerationRate;
+  public generationRateKeys!: any[];
 
   constructor(
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
   ) {
+    this.dataTypeKeys = Object.keys(this.dataTypes).filter(type => !isNaN(Number(type)));
+    this.generationRateKeys = Object.keys(this.generationRate).filter(type => !isNaN(Number(type)));
     this._signalrService.heartDataReceived.subscribe(data => {
       this.dataCounter++;
       this.pushData(data);
