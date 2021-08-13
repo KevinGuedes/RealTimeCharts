@@ -1,30 +1,29 @@
 <app-body class="charts">
 
   <section class="charts__form-container">
-    <!-- [formGroup]="categoryForm" -->
-    <form class="charts__form-container__form">
-          <mat-form-field>
-            <mat-label>Data Type</mat-label>
-            <mat-select>
-              <mat-option *ngFor="let key of dataTypeKeys" [value]="key" required>
-                {{dataTypes[key]}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+    <form [formGroup]="dataForm" class="charts__form-container__form">
+      <mat-form-field>
+        <mat-label>Data Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option *ngFor="let key of dataTypeKeys" [value]="key" required>
+            {{dataTypes[key]}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
 
-          <mat-form-field>
-            <mat-label>Generation Rate</mat-label>
-            <mat-select>
-              <mat-option *ngFor="let key of generationRateKeys" [value]="key" required>
-                {{generationRate[key]}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+      <mat-form-field>
+        <mat-label>Generation Rate</mat-label>
+        <mat-select formControlName="rate">
+          <mat-option *ngFor="let key of generationRateKeys" [value]="key" required>
+            {{generationRate[key]}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </form>
 
     <section class="charts__form-container__actions">
       <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
-      <button mat-raised-button color="primary" (click)="generateData()">Generate Data</button>
+      <button mat-raised-button color="primary" (click)="generateData()" [disabled]="dataForm.invalid">Generate Data</button>
     </section>
   </section>
 
