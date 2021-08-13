@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as DShape from 'd3-shape';
+import { DataGenerationRate } from 'src/app/models/data-generation-rate.enum';
 import { DataService } from 'src/app/services/data.service';
 import { SignalrService } from 'src/app/services/signalr.service';
 
@@ -47,9 +48,9 @@ export class ChartsComponent implements OnInit {
 
   public async generateHeartData(): Promise<void> {
 
-    await this._dataService.generateHeartData(360, 10)
+    await this._dataService.generateHeartData(360, 10, DataGenerationRate.Medium)
       .then(() => {
-        console.log("Generating heart data")
+        console.log("Heart data generation started")
       })
       .catch(error => console.error(error.message));
   }

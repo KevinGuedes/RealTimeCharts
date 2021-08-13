@@ -16,17 +16,14 @@
       [yAxis]="true" 
       [curve]="curve"
       [maxXAxisTickLength]="5" 
-      [xScaleMin]="0" 
-      [xScaleMax]="360" 
-      [yScaleMin]="0" 
-      [yScaleMax]="3.5" 
+      
       [trimXAxisTicks]="true"
       [trimYAxisTicks]="true" 
       [yAxisLabel]="yLabelName"
       (select)="onSelect($event)" 
       (activate)="onActivate($event)" 
       (deactivate)="onDeactivate($event)"
-      [autoScale]="false">
+      [autoScale]="true">
     </ngx-charts-line-chart>
   </section>
    
