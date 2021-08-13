@@ -15,7 +15,7 @@ namespace RealTimeCharts.Infra.IoC
             => services.AddSingleton<IEventBus, RabbitMQBus>(sp =>
             {
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                return new RabbitMQBus(sp.GetService<IMediator>(), scopeFactory);
+                return new RabbitMQBus(scopeFactory);
             });
 
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
