@@ -9,19 +9,23 @@ import { SignalrService } from 'src/app/services/signalr.service';
   styleUrls: ['./charts.component.scss']
 })
 export class ChartsComponent implements OnInit {
+
   public data: any[] = [{ name: "Heart", series: [] }];
   public view: [number, number] = [700, 300];
   public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
-  public showFetchMessage: boolean = false;
+  public colorSchemeNumber = { domain: ['#192f36'] };
   public legendTitle: string = 'Data';
   public yLabelName: string = 'Value';
+  public dataCounter: number = 0;
+
   constructor(
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
   ) {
     this._signalrService.heartDataReceived.subscribe(data => {
+      this.dataCounter++;
       this.pushData(data);
     })
   }
@@ -42,7 +46,7 @@ export class ChartsComponent implements OnInit {
   }
 
   public async generateHeartData(): Promise<void> {
-    this.showFetchMessage = true;
+
     await this._dataService.generateHeartData(360, 10)
       .then(() => {
         console.log("Generating heart data")
@@ -50,9 +54,10 @@ export class ChartsComponent implements OnInit {
       .catch(error => console.error(error.message));
   }
 
-  public clearChart(): void {
+  public clearData(): void {
     this.data[0].series = []
     this.data = [...this.data];
+    this.dataCounter = 0;
   }
 
   private pushData(data: any): void {

@@ -1,4 +1,5 @@
 <app-body class="charts">
+
   <section class="charts__linear-chart">
     <h1>Linear Chart</h1>
     <ngx-charts-line-chart 
@@ -53,17 +54,18 @@
     </ngx-charts-polar-chart>
   </section>
     
-    
-    
-    <!-- <ngx-charts-line-chart [view]="view" [scheme]="colorSchemeLine" [legend]="legend" [showXAxisLabel]="showXAxisLabel"
-      [showYAxisLabel]="showYAxisLabel" [xAxis]="xAxis" [yAxis]="yAxis" [curve]="curve" [maxYAxisTickLength]="300"
-      [maxXAxisTickLength]="300" [xScaleMin]="0" [xScaleMax]="360" [trimXAxisTicks]="true" [trimYAxisTicks]="true"
-      [xAxisLabel]="xAxisLabel" [yAxisLabel]="yAxisLabel" [results]="data" (select)="onSelect($event)"
-      (activate)="onActivate($event)" [autoScale]="false" (deactivate)="onDeactivate($event)">
-    </ngx-charts-line-chart> -->
+  <section class="charts__divider">
+    <mat-divider></mat-divider>
+  </section>
+
+  <section class="charts__data-counter">
+    <h1>Data Counter</h1>
+    <p class="charts__data-counter__counter">{{dataCounter}}</p>
+    <p class="charts__data-counter__text">Data point(s) received</p>
+  </section>
     
   <section class="charts__actions">
-    <button mat-stroked-button color="primary" (click)="clearChart()">Cleart Charts</button>
+    <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
     <button mat-raised-button color="primary" (click)="generateHeartData()">Fetch Heart Data</button>
   </section>
 </app-body>
