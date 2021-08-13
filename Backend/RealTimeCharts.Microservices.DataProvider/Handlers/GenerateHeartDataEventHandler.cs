@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OperationResult;
+using RealTimeCharts.Domain.Enums;
 using RealTimeCharts.Domain.Interfaces;
 using RealTimeCharts.Domain.Models;
 using RealTimeCharts.Microservices.DataProvider.Events;
@@ -16,6 +17,12 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
         private readonly IEventBus _eventBus;
         private readonly ILogger<GenerateHeartDataEventHandler> _logger;
         private readonly IDataGenerator _dataGenerator;
+        private readonly Dictionary<DataGenerationRate, int> _dataGenerationRate = new()
+        {
+            [DataGenerationRate.High] = 500,
+            [DataGenerationRate.Medium] = 1000,
+            [DataGenerationRate.Low] = 1500
+        };
 
         public GenerateHeartDataEventHandler(IEventBus eventBus, ILogger<GenerateHeartDataEventHandler> logger, IDataGenerator dataGenerator)
         {
@@ -40,7 +47,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
                         _eventBus.Publish(new HeartDataGeneratedEvent(dataPoint));
                     }
 
-                    Thread.Sleep(500);
+                    Thread.Sleep(_dataGenerationRate[@event.Rate]);
                 }
 
                 _logger.LogInformation("Heart data successfully generated");

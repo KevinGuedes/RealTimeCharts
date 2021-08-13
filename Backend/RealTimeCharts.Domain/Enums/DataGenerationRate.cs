@@ -1,6 +1,6 @@
 ﻿namespace RealTimeCharts.Domain.Enums
 {
-    public enum DataGenerationFrequency
+    public enum DataGenerationRate
     {
         Low,
         Medium,
