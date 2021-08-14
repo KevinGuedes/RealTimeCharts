@@ -1,14 +1,14 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { environment } from 'src/environments/environment';
+import { DataPoint } from '../models/data-point.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SignalrService {
 
-  public heartDataReceived: EventEmitter<any> = new EventEmitter();
-
+  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter();
   private _isConnected: boolean = false;
   private _hubUrl: string = environment.dataHubUrl;
 
@@ -36,7 +36,8 @@ export class SignalrService {
 
   private onHeartDataReceived(): void {
     this._hubConnection.on("HeartData", (data: string) => {
-      this.heartDataReceived.emit(JSON.parse(data));
+      const dataPoint = new DataPoint(JSON.parse(data));
+      this.heartDataReceived.emit(dataPoint);
     })
   }
 

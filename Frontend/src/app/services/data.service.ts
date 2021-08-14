@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from "rxjs";
 import { catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { DataPoint } from 'src/app/models/data-point.model';
 import { GenerateHeartDataRequest } from './requests/generate-heart-data.request';
 import { DataGenerationRate } from '../models/data-generation-rate.enum';
 
@@ -20,8 +19,9 @@ export class DataService {
 
   public generateHeartData(max: number, step: number, rate: DataGenerationRate): Promise<void> {
     const request = new GenerateHeartDataRequest(max, step, rate)
+
     return this._http.post<GenerateHeartDataRequest>(`${this._apiUrl}/heart`, request).pipe(
-      map(c => c),
+      map(response => response),
       catchError(error => this.errorHandler(error))
     ).toPromise();
   }

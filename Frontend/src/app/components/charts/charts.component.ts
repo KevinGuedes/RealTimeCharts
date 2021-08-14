@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import * as DShape from 'd3-shape';
 import { DataGenerationRate } from 'src/app/models/data-generation-rate.enum';
+import { DataPoint } from 'src/app/models/data-point.model';
 import { DataType } from 'src/app/models/data-type.enum';
 import { DataService } from 'src/app/services/data.service';
 import { SignalrService } from 'src/app/services/signalr.service';
@@ -14,7 +15,7 @@ import { SignalrService } from 'src/app/services/signalr.service';
 export class ChartsComponent implements OnInit {
 
   public data: any[] = [{ name: "Heart", series: [] }];
-  public view: [number, number] = [700, 300];
+  public view: [number, number] = [1000, 350];
   public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
@@ -33,12 +34,12 @@ export class ChartsComponent implements OnInit {
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
   ) {
-    this.dataTypeKeys = Object.keys(this.dataTypes).filter(type => !isNaN(Number(type)));
-    this.generationRateKeys = Object.keys(this.generationRate).filter(type => !isNaN(Number(type)));
+    this.dataTypeKeys = Object.keys(this.dataTypes).filter(type => !isNaN(Number(type))).map(Number);
+    this.generationRateKeys = Object.keys(this.generationRate).filter(type => !isNaN(Number(type))).map(Number);
 
-    this._signalrService.heartDataReceived.subscribe(data => {
+    this._signalrService.heartDataReceived.subscribe(dataPoint => {
       this.dataCounter++;
-      this.pushData(data);
+      this.pushData(dataPoint);
     })
 
     this.dataForm = new FormGroup({
@@ -67,11 +68,10 @@ export class ChartsComponent implements OnInit {
   }
 
   public async generateData(): Promise<void> {
-    const rate = DataGenerationRate[this.dataForm.value.rate];
-    const type = DataType[this.dataForm.value.type];
+    const rate = this.dataForm.value.rate;
+    const type = this.dataForm.value.type;
 
-    console.log(rate)
-    await this._dataService.generateHeartData(360, 10, DataGenerationRate.High)
+    await this._dataService.generateHeartData(360, 10, rate)
       .then(() => {
         console.log("Heart data generation started")
       })
@@ -79,14 +79,13 @@ export class ChartsComponent implements OnInit {
   }
 
   public clearData(): void {
-    console.log(this.dataForm)
     this.data[0].series = []
     this.data = [...this.data];
     this.dataCounter = 0;
   }
 
-  private pushData(data: any): void {
-    this.data[0].series.push({ "name": data.Name, "value": data.Value })
+  private pushData(dataPoint: DataPoint): void {
+    this.data[0].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
     this.data = [...this.data];
   }
 }
