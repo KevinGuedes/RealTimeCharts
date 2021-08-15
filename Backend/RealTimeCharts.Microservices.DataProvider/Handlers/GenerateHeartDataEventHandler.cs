@@ -8,6 +8,7 @@ using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RealTimeCharts.Microservices.DataProvider.Handlers
 {
@@ -30,7 +31,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
             _dataGenerator = dataGenerator;
         }
 
-        public Result Handle(GenerateHeartDataEvent @event)
+        public Task<Result> Handle(GenerateHeartDataEvent @event)
         {
             try
             {

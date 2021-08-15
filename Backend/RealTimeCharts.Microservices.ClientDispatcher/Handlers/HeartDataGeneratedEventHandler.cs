@@ -18,10 +18,10 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
             _dispatcherService = dispatcherService;
         }
 
-        public Result Handle(HeartDataGeneratedEvent @event)
+        public async Task<Result> Handle(HeartDataGeneratedEvent @event)
         {
             _logger.LogInformation($"Dispatching {@event.DataPoint} heart data point to client");
-            _dispatcherService.DispatchHeartData(@event.DataPoint);
+            await _dispatcherService.DispatchHeartData(@event.DataPoint);
             return Result.Success();
         }
     }
