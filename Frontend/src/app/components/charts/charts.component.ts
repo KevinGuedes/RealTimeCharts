@@ -15,20 +15,23 @@ import { SignalrService } from 'src/app/services/signalr.service';
 export class ChartsComponent implements OnInit {
 
   public data: any[] = [{ name: "Heart", series: [] }];
-  public view: [number, number] = [800, 350];
-  public curve: DShape.CurveFactory = DShape.curveBasis;
+  public view: [number, number] = [900, 350];
+  public curve: DShape.CurveFactory = DShape.curveCatmullRom.alpha(1);
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
   public colorSchemeNumber = { domain: ['#192f36'] };
   public legendTitle: string = 'Data';
   public yLabelName: string = 'Value';
   public dataCounter: number = 0;
-
   public dataTypes = DataType;
   public dataTypeKeys!: any[];
   public generationRate = DataGenerationRate;
   public generationRateKeys!: any[];
   public dataForm: FormGroup;
+
+  get formControl() {
+    return this.dataForm.controls;
+  }
 
   constructor(
     private readonly _signalrService: SignalrService,

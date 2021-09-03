@@ -1,6 +1,7 @@
 <app-body class="charts">
 
   <section class="charts__form-container">
+    <h1>Set Up</h1>
     <form [formGroup]="dataForm" class="charts__form-container__form">
       <mat-form-field>
         <mat-label>Data Type</mat-label>
@@ -9,6 +10,9 @@
             {{dataTypes[key]}}
           </mat-option>
         </mat-select>
+        <mat-error *ngIf="formControl.type.touched && formControl.type.invalid">
+          Select a data type
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field>
@@ -18,6 +22,9 @@
             {{generationRate[key]}}
           </mat-option>
         </mat-select>
+        <mat-error *ngIf="formControl.rate.touched && formControl.rate.invalid">
+          Select a data generation rate
+        </mat-error>
       </mat-form-field>
     </form>
 
@@ -86,9 +93,8 @@
   </section>
 
   <section class="charts__data-counter">
-    <h1>Data Counter</h1>
+    <h1>Data point(s) received</h1>
     <p class="charts__data-counter__counter">{{dataCounter}}</p>
-    <p class="charts__data-counter__text">Data point(s) received</p>
   </section>
 
 </app-body>
