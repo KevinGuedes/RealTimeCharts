@@ -20,6 +20,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly List<Type> _eventTypes;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly RabbitOptions _rabbitOptions;
+        private bool _exchangeCreated;
 
         public EventBus(IServiceScopeFactory serviceScopeFactory, IOptions<RabbitOptions> rabbitOption)
         {
@@ -27,6 +28,7 @@ namespace RealTimeCharts.Infra.Bus
             _handlers = new Dictionary<string, List<Type>>();
             _eventTypes = new List<Type>();
             _rabbitOptions = rabbitOption.Value;
+            _exchangeCreated = false;
         }
 
         public void Publish<E>(E @event) where E : Event
@@ -39,8 +41,9 @@ namespace RealTimeCharts.Infra.Bus
                 using var channel = connection.CreateModel();
                 string eventName = @event.GetType().Name;
 
-                //channel.QueueDeclare(eventName, false, false, false, null);
-                channel.ExchangeDeclare(exchange: _rabbitOptions.ExchangeName, type: "direct", true, false, null);
+                if (!_exchangeCreated)
+                    CreateExchange(channel);
+
                 var message = JsonConvert.SerializeObject(@event);
                 var body = Encoding.UTF8.GetBytes(message);
 
@@ -48,7 +51,6 @@ namespace RealTimeCharts.Infra.Bus
             }
             catch(Exception ex)
             {
-                var x = 3;
             }
         }
 
@@ -84,6 +86,9 @@ namespace RealTimeCharts.Infra.Bus
             var connection = factory.CreateConnection();
             var channel = connection.CreateModel();
 
+            if(!_exchangeCreated)
+                CreateExchange(channel);
+
             string eventName = typeof(TEvent).Name;
             channel.QueueDeclare(queue: _rabbitOptions.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
             channel.QueueBind(queue: _rabbitOptions.QueueName, exchange: _rabbitOptions.ExchangeName, routingKey: eventName);
@@ -106,7 +111,6 @@ namespace RealTimeCharts.Infra.Bus
             }
             catch (Exception ex)
             {
-                var x = 3;
             }
         }
 
@@ -127,6 +131,12 @@ namespace RealTimeCharts.Infra.Bus
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
                 }
             }
+        }
+
+        private void CreateExchange(IModel channel)  
+        {
+            channel.ExchangeDeclare(exchange: _rabbitOptions.ExchangeName, type: "direct");
+            _exchangeCreated = true;
         }
     }
 }
