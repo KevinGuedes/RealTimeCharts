@@ -16,7 +16,7 @@ export class ChartsComponent implements OnInit {
 
   public data: any[] = [{ name: "Heart", series: [] }];
   public view: [number, number] = [900, 350];
-  public curve: DShape.CurveFactory = DShape.curveCatmullRom.alpha(1);
+  public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#aae3f5'] };
   public colorSchemeNumber = { domain: ['#192f36'] };

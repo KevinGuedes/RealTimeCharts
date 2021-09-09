@@ -18,7 +18,7 @@ namespace RealTimeCharts.Microservices.DataProvider
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddRabbitMQBus();
+                    services.AddRabbitMQBus(hostContext.Configuration);
                     services.RegisterEventHandlers();
 
                     services.AddScoped<IDataGenerator, DataGenerator>();

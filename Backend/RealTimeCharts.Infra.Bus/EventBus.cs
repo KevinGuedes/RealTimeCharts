@@ -1,10 +1,10 @@
-﻿using MediatR;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using RealTimeCharts.Shared.Events;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RealTimeCharts.Domain.Interfaces;
+using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Collections.Generic;
@@ -14,33 +14,42 @@ using System.Threading.Tasks;
 
 namespace RealTimeCharts.Infra.Bus
 {
-    public sealed class RabbitMQBus : IEventBus
+    public sealed class EventBus : IEventBus
     {
         private readonly Dictionary<string, List<Type>> _handlers;
         private readonly List<Type> _eventTypes;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly RabbitOptions _rabbitOptions;
 
-        public RabbitMQBus(IServiceScopeFactory serviceScopeFactory)
+        public EventBus(IServiceScopeFactory serviceScopeFactory, IOptions<RabbitOptions> rabbitOption)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _handlers = new Dictionary<string, List<Type>>();
             _eventTypes = new List<Type>();
+            _rabbitOptions = rabbitOption.Value;
         }
 
         public void Publish<E>(E @event) where E : Event
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            try
+            {
+                var factory = new ConnectionFactory() { HostName = "localhost" };
 
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
-            string eventName = @event.GetType().Name;
+                using var connection = factory.CreateConnection();
+                using var channel = connection.CreateModel();
+                string eventName = @event.GetType().Name;
 
-            channel.QueueDeclare(eventName, false, false, false, null);
+                //channel.QueueDeclare(eventName, false, false, false, null);
+                channel.ExchangeDeclare(exchange: _rabbitOptions.ExchangeName, type: "direct", true, false, null);
+                var message = JsonConvert.SerializeObject(@event);
+                var body = Encoding.UTF8.GetBytes(message);
 
-            var message = JsonConvert.SerializeObject(@event);
-            var body = Encoding.UTF8.GetBytes(message);
-
-            channel.BasicPublish("", eventName, null, body);
+                channel.BasicPublish(_rabbitOptions.ExchangeName, eventName, null, body);
+            }
+            catch(Exception ex)
+            {
+                var x = 3;
+            }
         }
 
         public void Subscribe<E, H>()
@@ -76,11 +85,13 @@ namespace RealTimeCharts.Infra.Bus
             var channel = connection.CreateModel();
 
             string eventName = typeof(TEvent).Name;
-            channel.QueueDeclare(eventName, false, false, false, null);
+            channel.QueueDeclare(queue: _rabbitOptions.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueBind(queue: _rabbitOptions.QueueName, exchange: _rabbitOptions.ExchangeName, routingKey: eventName);
+
             var consumer = new AsyncEventingBasicConsumer(channel);
 
             consumer.Received += Consumer_Received;
-            channel.BasicConsume(eventName, true, consumer);
+            channel.BasicConsume(queue: _rabbitOptions.QueueName, autoAck: true, consumer);
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
@@ -91,9 +102,11 @@ namespace RealTimeCharts.Infra.Bus
             try
             {
                 await ProcessEvent(eventName, message).ConfigureAwait(false);
+
             }
             catch (Exception ex)
             {
+                var x = 3;
             }
         }
 

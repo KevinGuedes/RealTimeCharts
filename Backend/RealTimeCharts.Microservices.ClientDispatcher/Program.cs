@@ -20,7 +20,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddRabbitMQBus();
+                    services.AddRabbitMQBus(hostContext.Configuration);
                     services.RegisterEventHandlers();
 
                     var sp = services.BuildServiceProvider();

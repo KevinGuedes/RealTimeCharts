@@ -19,9 +19,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
         private readonly IDataGenerator _dataGenerator;
         private readonly Dictionary<DataGenerationRate, int> _dataGenerationRate = new()
         {
-            [DataGenerationRate.High] = 500,
-            [DataGenerationRate.Medium] = 1000,
-            [DataGenerationRate.Low] = 1500
+            [DataGenerationRate.High] = 300,
+            [DataGenerationRate.Medium] = 700,
+            [DataGenerationRate.Low] = 1000
         };
 
         public GenerateHeartDataEventHandler(IEventBus eventBus, ILogger<GenerateHeartDataEventHandler> logger, IDataGenerator dataGenerator)
