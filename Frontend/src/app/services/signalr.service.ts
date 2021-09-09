@@ -8,7 +8,8 @@ import { DataPoint } from '../models/data-point.model';
 })
 export class SignalrService {
 
-  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter();
+  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
+
   private _isConnected: boolean = false;
   private _hubUrl: string = environment.dataHubUrl;
 
@@ -19,9 +20,7 @@ export class SignalrService {
 
   constructor() {
     this.startConnection();
-
     this.onHeartDataReceived();
-
     this._hubConnection.onclose(async () => {
       this._isConnected = false;
       await this.startConnection();

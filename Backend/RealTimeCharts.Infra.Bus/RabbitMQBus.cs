@@ -106,15 +106,11 @@ namespace RealTimeCharts.Infra.Bus
                 foreach (var subscription in subscriptions)
                 {
                     var handler = scope.ServiceProvider.GetService(subscription);
-
                     if (handler == null) continue;
 
-                    var eventType = _eventTypes.SingleOrDefault(t => t.Name == eventName);
-
+                    var eventType = _eventTypes.SingleOrDefault(eventType => eventType.Name == eventName);
                     var @event = JsonConvert.DeserializeObject(message, eventType);
-
                     var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
-
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
                 }
             }
