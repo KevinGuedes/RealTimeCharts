@@ -20,7 +20,7 @@ namespace RealTimeCharts.Presentation.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRabbitMQBus();
+            services.AddRabbitMQBus(Configuration);
             services.AddMediatRToAppHandlers();
             services.AddMediatRToAssemblies(new Assembly[] { 
                Assembly.GetExecutingAssembly()
