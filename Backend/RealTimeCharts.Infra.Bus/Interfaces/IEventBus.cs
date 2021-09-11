@@ -5,7 +5,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
 {
     public interface IEventBus
     {
-        void Publish<E>(E @event) where E : Event;
+        void Publish(Event @event);
 
         void Subscribe<E, H>()
             where E : Event
