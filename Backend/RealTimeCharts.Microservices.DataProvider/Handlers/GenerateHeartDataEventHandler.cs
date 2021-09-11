@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OperationResult;
-using RealTimeCharts.Domain.Interfaces;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Microservices.DataProvider.Events;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Shared.Enums;

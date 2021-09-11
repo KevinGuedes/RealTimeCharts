@@ -8,9 +8,9 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
 {
     public static class SignalRConnectionExtension
     {
-        public static async Task StartPersistentAsync(this HubConnection connection, ILogger<Program> logger)
+        public static async Task StartPersistentConnectionAsync(this HubConnection connection, ILogger<Program> logger)
         {
-            var reconnectPolicy = Policy
+            var connectionPolicy = Policy
                 .Handle<Exception>()
                 .WaitAndRetryForeverAsync(retryCount =>
                 {
@@ -18,7 +18,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
                     return TimeSpan.FromSeconds(Math.Pow(retryCount, 2));
                 });
 
-            var connectionTask = reconnectPolicy.ExecuteAsync(async () =>
+            var connectionTask = connectionPolicy.ExecuteAsync(async () =>
             {
                 await connection.StartAsync();
                 logger.LogInformation("SignalR connected");

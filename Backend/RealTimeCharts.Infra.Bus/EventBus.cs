@@ -2,14 +2,17 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RealTimeCharts.Domain.Interfaces;
+using RabbitMQ.Client.Exceptions;
+using RealTimeCharts.Infra.Bus.Configurations;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,99 +21,146 @@ namespace RealTimeCharts.Infra.Bus
     public sealed class EventBus : IEventBus
     {
         private readonly ILogger<EventBus> _logger;
-        private readonly Dictionary<string, List<Type>> _handlers;
-        private readonly List<Type> _eventTypes;
+        private readonly RabbitMQConfigurations _rabbitMqConfig;
+        private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly RabbitOptions _rabbitOptions;
+        private readonly int _maxRetryAttempts;
+        private IModel _consumerChannel;
         private bool _exchangeCreated;
 
         public EventBus(
             ILogger<EventBus> logger,
-            IServiceScopeFactory serviceScopeFactory, 
-            IOptions<RabbitOptions> rabbitOption)
+            IOptions<RabbitMQConfigurations> rabbitMqConfig,
+            IBusPersistentConnection busPersistentConnection,
+            ISubscriptionManager subscriptionManager,
+            IServiceScopeFactory serviceScopeFactory,
+            int maxRetryAttempts = 5)
         {
             _logger = logger;
+            _subscriptionManager = subscriptionManager;
+            _busPersistentConnection = busPersistentConnection;
             _serviceScopeFactory = serviceScopeFactory;
-            _handlers = new Dictionary<string, List<Type>>();
-            _eventTypes = new List<Type>();
-            _rabbitOptions = rabbitOption.Value;
+            _rabbitMqConfig = rabbitMqConfig.Value;
+            _maxRetryAttempts = maxRetryAttempts;
             _exchangeCreated = false;
         }
 
-        public void Publish<E>(E @event) where E : Event
+        public void Publish(Event @event)
         {
-            try
+            _logger.LogInformation($"Creating channel to publish event");
+            CheckConnection();
+            using var channel = _busPersistentConnection.CreateChannel();
+            _logger.LogInformation($"Channel created");
+
+            CreateExchange(channel);
+
+            string eventName = @event.GetType().Name;
+            _logger.LogInformation($"Serializing {eventName}");
+            var message = JsonConvert.SerializeObject(@event);
+            var body = Encoding.UTF8.GetBytes(message);
+            _logger.LogInformation($"{eventName} serialized");
+
+            _logger.LogInformation($"Publishing {eventName} with Id: {@event.Id}");
+            var publishPolicy = RetryPolicy.Handle<BrokerUnreachableException>()
+                .Or<SocketException>()
+                .WaitAndRetry(_maxRetryAttempts, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+                {
+                    _logger.LogWarning(ex, $"Failed to publish {eventName} with Id {@event.Id} after {time.TotalSeconds:n1}s: ({ex.Message})");
+                });
+
+            publishPolicy.Execute(() =>
             {
-                var factory = new ConnectionFactory() { 
-                    HostName = _rabbitOptions.HostName,
-                    UserName = _rabbitOptions.UserName,
-                    Password = _rabbitOptions.Password,
-                    Port =  _rabbitOptions.Port
-                };
-
-                using var connection = factory.CreateConnection();
-                using var channel = connection.CreateModel();
-                string eventName = @event.GetType().Name;
-
-                if (!_exchangeCreated)
-                    CreateExchange(channel);
-
-                var message = JsonConvert.SerializeObject(@event);
-                var body = Encoding.UTF8.GetBytes(message);
-
-                channel.BasicPublish(_rabbitOptions.ExchangeName, eventName, null, body);
-            }
-            catch(Exception ex)
-            {
-                _logger.LogError($"Failed to publish event: {ex.Message}");
-            }
+                var properties = channel.CreateBasicProperties();
+                properties.DeliveryMode = 2;
+                channel.BasicPublish(
+                    exchange: _rabbitMqConfig.ExchangeName,
+                    routingKey: eventName,
+                    basicProperties: properties,
+                    body: body);
+            });
+            _logger.LogInformation($"{eventName} with Id: {@event.Id} published");
         }
 
         public void Subscribe<E, H>()
             where E : Event
             where H : IEventHandler<E>
         {
-            var eventName = typeof(E).Name;
-            var handlerType = typeof(H);
-
-            if (!_eventTypes.Contains(typeof(E)))
-                _eventTypes.Add(typeof(E));
-
-            if (!_handlers.ContainsKey(eventName))
-                _handlers.Add(eventName, new List<Type>());
-
-            if (_handlers[eventName].Any(s => s.GetType() == handlerType))
-                throw new ArgumentException($"Handler type {handlerType.Name} already is registered for {eventName}", nameof(handlerType));
-
-            _handlers[eventName].Add(handlerType);
-
-            StartBasicConsume<E>();
+            _subscriptionManager.AddSubscription<E, H>();
+            _consumerChannel = CreateConsumerChannel();
+            BindQueueToEvent<E>();
+            StartBasicConsume();
         }
 
-        private void StartBasicConsume<TEvent>() where TEvent : Event
+        private void BindQueueToEvent<E>() where E : Event
         {
-            var factory = new ConnectionFactory()
+            string eventName = typeof(E).Name;
+            _logger.LogInformation($"Binding queue to receive {eventName}");
+            CheckConnection();
+
+            _consumerChannel.QueueBind(
+                            queue: _rabbitMqConfig.QueueName,
+                            exchange: _rabbitMqConfig.ExchangeName,
+                            routingKey: eventName);
+            _logger.LogInformation("Queue bound to exchange");
+        }
+
+        private void CreateExchange(IModel channel)
+        {
+            if (!_exchangeCreated)
             {
-                HostName = _rabbitOptions.HostName,
-                UserName = _rabbitOptions.UserName,
-                Password = _rabbitOptions.Password,
-                DispatchConsumersAsync = true
+                _logger.LogInformation("Creating exchange to publish events");
+                channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
+                _exchangeCreated = true;
+                _logger.LogInformation("Exchange created");
+            }
+        }
+
+        private IModel CreateConsumerChannel()
+        {
+            _logger.LogInformation($"Creating consumer channel");
+            CheckConnection();
+            var channel = _busPersistentConnection.CreateChannel();
+            CreateExchange(channel);
+            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+
+            channel.CallbackException += (sender, ea) =>
+            {
+                _logger.LogWarning(ea.Exception, "Recreating consumer channel");
+                _consumerChannel.Dispose();
+                _consumerChannel = CreateConsumerChannel();
+                StartBasicConsume();
             };
 
-            var connection = factory.CreateConnection();
-            var channel = connection.CreateModel();
+            _logger.LogInformation($"Consumer channel created");
+            return channel;
+        }
 
-            if(!_exchangeCreated)
-                CreateExchange(channel);
+        private void CheckConnection()
+        {
+            if (!_busPersistentConnection.IsConnected)
+                _busPersistentConnection.StartPersistentConnection();
+        }
 
-            string eventName = typeof(TEvent).Name;
-            channel.QueueDeclare(queue: _rabbitOptions.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-            channel.QueueBind(queue: _rabbitOptions.QueueName, exchange: _rabbitOptions.ExchangeName, routingKey: eventName);
-
-            var consumer = new AsyncEventingBasicConsumer(channel);
-
-            consumer.Received += Consumer_Received;
-            channel.BasicConsume(queue: _rabbitOptions.QueueName, autoAck: true, consumer);
+        private void StartBasicConsume()
+        {
+            if (_consumerChannel != null)
+            {
+                _logger.LogInformation("Starting basic consume");
+                var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
+                consumer.Received += Consumer_Received;
+                _consumerChannel.BasicConsume(
+                    queue: _rabbitMqConfig.QueueName,
+                    autoAck: false,
+                    consumer: consumer);
+                _logger.LogInformation("Basic consume started");
+            }
+            else
+                _logger.LogError("Consumer channel not created");
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
@@ -120,38 +170,36 @@ namespace RealTimeCharts.Infra.Bus
 
             try
             {
-                await ProcessEvent(eventName, message).ConfigureAwait(false);
-
+                await ProcessEvent(eventName, message);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed process event: {ex.Message}");
+                _logger.LogError($"Failed process event {eventName}: {ex.Message}");
             }
+
+            _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
 
         private async Task ProcessEvent(string eventName, string message)
         {
-            if (_handlers.ContainsKey(eventName))
+            _logger.LogTrace($"Processing {eventName}");
+
+            if (_subscriptionManager.HasSubscriptionsForEvent(eventName))
             {
                 using var scope = _serviceScopeFactory.CreateScope();
-                var subscriptions = _handlers[eventName];
+                var subscriptions = _subscriptionManager.GetHandlersForEvent(eventName);
+
                 foreach (var subscription in subscriptions)
                 {
                     var handler = scope.ServiceProvider.GetService(subscription);
                     if (handler == null) continue;
 
-                    var eventType = _eventTypes.SingleOrDefault(eventType => eventType.Name == eventName);
+                    var eventType = _subscriptionManager.GetEventTypeByName(eventName);
                     var @event = JsonConvert.DeserializeObject(message, eventType);
                     var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
                 }
             }
-        }
-
-        private void CreateExchange(IModel channel)  
-        {
-            channel.ExchangeDeclare(exchange: _rabbitOptions.ExchangeName, type: "direct");
-            _exchangeCreated = true;
         }
     }
 }

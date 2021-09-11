@@ -1,5 +1,6 @@
 export enum DataGenerationRate {
     Low,
     Medium,
-    High
+    High,
+    Ultra,
 }

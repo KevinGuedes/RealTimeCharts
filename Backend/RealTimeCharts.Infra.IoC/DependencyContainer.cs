@@ -4,9 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
 using RealTimeCharts.Application.Heart.Validators;
-using RealTimeCharts.Domain.Interfaces;
 using RealTimeCharts.Infra.Bus;
+using RealTimeCharts.Infra.Bus.Configurations;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using System;
 using System.Reflection;
 
@@ -16,15 +18,26 @@ namespace RealTimeCharts.Infra.IoC
     {
         public static void AddRabbitMQBus(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<RabbitOptions>(configuration.GetSection(nameof(RabbitOptions)));
+            services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
+            services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
+
+            services.AddSingleton<IBusPersistentConnection, BusPersistentConnection>(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<BusPersistentConnection>>();
+                var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
+
+                return new(logger, RabbitMqConnectionFactory.CreateRabbitMqConnectionFactory(options));
+            });
 
             services.AddSingleton<IEventBus, EventBus>(sp =>
             {
-                var eventBusLogger = sp.GetRequiredService<ILogger<EventBus>>();
+                var logger = sp.GetRequiredService<ILogger<EventBus>>();
+                var busPersistentConnection = sp.GetRequiredService<IBusPersistentConnection>();
+                var subcriptionsManager = sp.GetRequiredService<ISubscriptionManager>();
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                var options = sp.GetService<IOptions<RabbitOptions>>();
+                var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
 
-                return new(eventBusLogger, scopeFactory, options);
+                return new(logger, options, busPersistentConnection, subcriptionsManager, scopeFactory);
             });
         }
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
