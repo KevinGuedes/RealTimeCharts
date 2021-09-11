@@ -3,7 +3,6 @@ using Microsoft.Extensions.Hosting;
 using RealTimeCharts.Infra.IoC;
 using RealTimeCharts.Microservices.DataProvider.Handlers;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
-using RealTimeCharts.Microservices.DataProvider.IoC;
 using RealTimeCharts.Microservices.DataProvider.Services;
 
 namespace RealTimeCharts.Microservices.DataProvider

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using RealTimeCharts.Infra.IoC;
 using RealTimeCharts.Microservices.ClientDispatcher.Handlers;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
-using RealTimeCharts.Microservices.ClientDispatcher.IoC;
 using RealTimeCharts.Microservices.ClientDispatcher.Services;
 using RealTimeCharts.Microservices.ClientDispatcher.Tools;
 
