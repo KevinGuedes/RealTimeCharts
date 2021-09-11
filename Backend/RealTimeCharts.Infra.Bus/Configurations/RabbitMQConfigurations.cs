@@ -1,6 +1,6 @@
-﻿namespace RealTimeCharts.Infra.Bus
+﻿namespace RealTimeCharts.Infra.Configurations.Bus
 {
-    public class RabbitOptions
+    public class RabbitMQConfigurations
     {
         public string HostName { get; set; }
         public string UserName { get; set; }

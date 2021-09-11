@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RealTimeCharts.Domain.Interfaces;
+using RealTimeCharts.Infra.Configurations.Bus;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System;
@@ -21,19 +22,19 @@ namespace RealTimeCharts.Infra.Bus
         private readonly Dictionary<string, List<Type>> _handlers;
         private readonly List<Type> _eventTypes;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly RabbitOptions _rabbitOptions;
+        private readonly RabbitMQConfigurations _rabbitMqConfig;
         private bool _exchangeCreated;
 
         public EventBus(
             ILogger<EventBus> logger,
             IServiceScopeFactory serviceScopeFactory, 
-            IOptions<RabbitOptions> rabbitOption)
+            IOptions<RabbitMQConfigurations> rabbitMqConfig)
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _handlers = new Dictionary<string, List<Type>>();
             _eventTypes = new List<Type>();
-            _rabbitOptions = rabbitOption.Value;
+            _rabbitMqConfig = rabbitMqConfig.Value;
             _exchangeCreated = false;
         }
 
@@ -42,10 +43,10 @@ namespace RealTimeCharts.Infra.Bus
             try
             {
                 var factory = new ConnectionFactory() { 
-                    HostName = _rabbitOptions.HostName,
-                    UserName = _rabbitOptions.UserName,
-                    Password = _rabbitOptions.Password,
-                    Port =  _rabbitOptions.Port
+                    HostName = _rabbitMqConfig.HostName,
+                    UserName = _rabbitMqConfig.UserName,
+                    Password = _rabbitMqConfig.Password,
+                    Port = _rabbitMqConfig.Port
                 };
 
                 using var connection = factory.CreateConnection();
@@ -58,7 +59,7 @@ namespace RealTimeCharts.Infra.Bus
                 var message = JsonConvert.SerializeObject(@event);
                 var body = Encoding.UTF8.GetBytes(message);
 
-                channel.BasicPublish(_rabbitOptions.ExchangeName, eventName, null, body);
+                channel.BasicPublish(_rabbitMqConfig.ExchangeName, eventName, null, body);
             }
             catch(Exception ex)
             {
@@ -91,9 +92,9 @@ namespace RealTimeCharts.Infra.Bus
         {
             var factory = new ConnectionFactory()
             {
-                HostName = _rabbitOptions.HostName,
-                UserName = _rabbitOptions.UserName,
-                Password = _rabbitOptions.Password,
+                HostName = _rabbitMqConfig.HostName,
+                UserName = _rabbitMqConfig.UserName,
+                Password = _rabbitMqConfig.Password,
                 DispatchConsumersAsync = true
             };
 
@@ -104,13 +105,13 @@ namespace RealTimeCharts.Infra.Bus
                 CreateExchange(channel);
 
             string eventName = typeof(TEvent).Name;
-            channel.QueueDeclare(queue: _rabbitOptions.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
-            channel.QueueBind(queue: _rabbitOptions.QueueName, exchange: _rabbitOptions.ExchangeName, routingKey: eventName);
+            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueBind(queue: _rabbitMqConfig.QueueName, exchange: _rabbitMqConfig.ExchangeName, routingKey: eventName);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
 
             consumer.Received += Consumer_Received;
-            channel.BasicConsume(queue: _rabbitOptions.QueueName, autoAck: true, consumer);
+            channel.BasicConsume(queue: _rabbitMqConfig.QueueName, autoAck: true, consumer);
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
@@ -150,7 +151,7 @@ namespace RealTimeCharts.Infra.Bus
 
         private void CreateExchange(IModel channel)  
         {
-            channel.ExchangeDeclare(exchange: _rabbitOptions.ExchangeName, type: "direct");
+            channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
             _exchangeCreated = true;
         }
     }

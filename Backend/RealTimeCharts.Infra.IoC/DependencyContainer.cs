@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using RealTimeCharts.Application.Heart.Validators;
 using RealTimeCharts.Domain.Interfaces;
 using RealTimeCharts.Infra.Bus;
+using RealTimeCharts.Infra.Configurations.Bus;
 using System;
 using System.Reflection;
 
@@ -16,13 +17,13 @@ namespace RealTimeCharts.Infra.IoC
     {
         public static void AddRabbitMQBus(this IServiceCollection services, IConfiguration configuration)
         {
-            services.Configure<RabbitOptions>(configuration.GetSection(nameof(RabbitOptions)));
+            services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
 
             services.AddSingleton<IEventBus, EventBus>(sp =>
             {
                 var eventBusLogger = sp.GetRequiredService<ILogger<EventBus>>();
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                var options = sp.GetService<IOptions<RabbitOptions>>();
+                var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
 
                 return new(eventBusLogger, scopeFactory, options);
             });
