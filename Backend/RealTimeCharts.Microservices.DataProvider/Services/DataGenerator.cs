@@ -1,11 +1,23 @@
 ﻿using RealTimeCharts.Domain.Models;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
+using RealTimeCharts.Shared.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace RealTimeCharts.Microservices.DataProvider.Services
 {
     public class DataGenerator : IDataGenerator
     {
+        private readonly Dictionary<DataGenerationRate, int> _dataGenerationRate = new()
+        {
+            [DataGenerationRate.High] = 600,
+            [DataGenerationRate.Medium] = 800,
+            [DataGenerationRate.Low] = 1000
+        };
+
+        public int GetSleepTimeByGenerationRate(DataGenerationRate rate)
+            => _dataGenerationRate[rate];
+
         public DataPoint GenerateHeartData(double name)
         {
             var angle = Math.PI * name / 180.0;

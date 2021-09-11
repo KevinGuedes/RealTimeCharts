@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
@@ -16,14 +17,19 @@ namespace RealTimeCharts.Infra.Bus
 {
     public sealed class EventBus : IEventBus
     {
+        private readonly ILogger<EventBus> _logger;
         private readonly Dictionary<string, List<Type>> _handlers;
         private readonly List<Type> _eventTypes;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly RabbitOptions _rabbitOptions;
         private bool _exchangeCreated;
 
-        public EventBus(IServiceScopeFactory serviceScopeFactory, IOptions<RabbitOptions> rabbitOption)
+        public EventBus(
+            ILogger<EventBus> logger,
+            IServiceScopeFactory serviceScopeFactory, 
+            IOptions<RabbitOptions> rabbitOption)
         {
+            _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _handlers = new Dictionary<string, List<Type>>();
             _eventTypes = new List<Type>();
@@ -35,7 +41,12 @@ namespace RealTimeCharts.Infra.Bus
         {
             try
             {
-                var factory = new ConnectionFactory() { HostName = "localhost" };
+                var factory = new ConnectionFactory() { 
+                    HostName = _rabbitOptions.HostName,
+                    UserName = _rabbitOptions.UserName,
+                    Password = _rabbitOptions.Password,
+                    Port =  _rabbitOptions.Port
+                };
 
                 using var connection = factory.CreateConnection();
                 using var channel = connection.CreateModel();
@@ -51,6 +62,7 @@ namespace RealTimeCharts.Infra.Bus
             }
             catch(Exception ex)
             {
+                _logger.LogError($"Failed to publish event: {ex.Message}");
             }
         }
 
@@ -79,7 +91,9 @@ namespace RealTimeCharts.Infra.Bus
         {
             var factory = new ConnectionFactory()
             {
-                HostName = "localhost",
+                HostName = _rabbitOptions.HostName,
+                UserName = _rabbitOptions.UserName,
+                Password = _rabbitOptions.Password,
                 DispatchConsumersAsync = true
             };
 
@@ -111,6 +125,7 @@ namespace RealTimeCharts.Infra.Bus
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Failed process event: {ex.Message}");
             }
         }
 

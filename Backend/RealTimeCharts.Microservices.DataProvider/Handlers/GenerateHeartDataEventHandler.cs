@@ -17,12 +17,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
         private readonly IEventBus _eventBus;
         private readonly ILogger<GenerateHeartDataEventHandler> _logger;
         private readonly IDataGenerator _dataGenerator;
-        private readonly Dictionary<DataGenerationRate, int> _dataGenerationRate = new()
-        {
-            [DataGenerationRate.High] = 300,
-            [DataGenerationRate.Medium] = 700,
-            [DataGenerationRate.Low] = 1000
-        };
+        
 
         public GenerateHeartDataEventHandler(IEventBus eventBus, ILogger<GenerateHeartDataEventHandler> logger, IDataGenerator dataGenerator)
         {
@@ -47,7 +42,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
                         _eventBus.Publish(new HeartDataGeneratedEvent(dataPoint));
                     }
 
-                    Thread.Sleep(_dataGenerationRate[@event.Rate]);
+                    Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));
                 }
 
                 _logger.LogInformation("Heart data successfully generated");

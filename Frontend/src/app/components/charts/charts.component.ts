@@ -18,7 +18,7 @@ export class ChartsComponent implements OnInit {
   public view: [number, number] = [900, 350];
   public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
-  public colorSchemePolar = { domain: ['#aae3f5'] };
+  public colorSchemePolar = { domain: ['#eb4646'] };
   public colorSchemeNumber = { domain: ['#192f36'] };
   public legendTitle: string = 'Data';
   public yLabelName: string = 'Value';

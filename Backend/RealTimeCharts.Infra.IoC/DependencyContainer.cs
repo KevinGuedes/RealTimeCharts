@@ -2,6 +2,7 @@
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RealTimeCharts.Application.Heart.Validators;
 using RealTimeCharts.Domain.Interfaces;
@@ -19,9 +20,11 @@ namespace RealTimeCharts.Infra.IoC
 
             services.AddSingleton<IEventBus, EventBus>(sp =>
             {
+                var eventBusLogger = sp.GetRequiredService<ILogger<EventBus>>();
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
                 var options = sp.GetService<IOptions<RabbitOptions>>();
-                return new EventBus(scopeFactory, options);
+
+                return new(eventBusLogger, scopeFactory, options);
             });
         }
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
