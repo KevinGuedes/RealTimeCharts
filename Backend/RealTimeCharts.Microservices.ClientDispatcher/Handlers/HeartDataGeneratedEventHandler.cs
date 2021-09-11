@@ -21,7 +21,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
         public async Task<Result> Handle(HeartDataGeneratedEvent @event)
         {
             _logger.LogInformation($"Dispatching {@event.DataPoint} heart data point to client");
-            await _dispatcherService.DispatchHeartData(@event.DataPoint);
+            await _dispatcherService.DispatchHeartData(@event.DataPoint, @event.ConnectionId);
             return Result.Success();
         }
     }

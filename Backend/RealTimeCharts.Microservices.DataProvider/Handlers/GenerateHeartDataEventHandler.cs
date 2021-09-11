@@ -39,7 +39,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
                     using (_logger.BeginScope(new Dictionary<string, string>() { ["DataPoint"] = dataPoint.ToString() }))
                     {
                         _logger.LogInformation($"Publishing heart data generated event to dispatcher");
-                        _eventBus.Publish(new HeartDataGeneratedEvent(dataPoint));
+                        _eventBus.Publish(new HeartDataGeneratedEvent(dataPoint, @event.ConnectionId));
                     }
 
                     Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));

@@ -8,15 +8,14 @@ import { DataPoint } from '../models/data-point.model';
 })
 export class SignalrService {
 
-  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
-
-  private _isConnected: boolean = false;
-  private _hubUrl: string = environment.dataHubUrl;
-
+  private readonly _hubUrl: string = environment.dataHubUrl;
   private readonly _hubConnection: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl(this._hubUrl)
     .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
     .build();
+  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
+  private _isConnected: boolean = false;
+  private _connectionId!: string;
 
   constructor() {
     this.startConnection();
@@ -30,6 +29,7 @@ export class SignalrService {
   private async startConnection(): Promise<void> {
     await this._hubConnection.start().then(() => {
       this._isConnected = true;
+      this._connectionId = this._hubConnection.connectionId as string;
     });
   }
 
@@ -40,7 +40,7 @@ export class SignalrService {
     })
   }
 
-  public sendNewMessage(): void {
-    this._hubConnection.send('HeartData', "hello boy");
+  public GetConnectionId(): string {
+    return this._isConnected ? this._connectionId : "";
   }
 }

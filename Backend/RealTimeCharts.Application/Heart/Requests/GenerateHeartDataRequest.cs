@@ -9,5 +9,6 @@ namespace RealTimeCharts.Application.Heart.Requests
         public int Max { get; set; }
         public int Step { get; set; }
         public DataGenerationRate Rate { get; set; }
+        public string ConnectionId { get; set; }
     }
 }

@@ -5,15 +5,17 @@ namespace RealTimeCharts.Domain.Events
 {
     public class GenerateHeartDataEvent : Event
     {
-        public GenerateHeartDataEvent(int max, int step, DataGenerationRate rate)
+        public GenerateHeartDataEvent(int max, int step, DataGenerationRate rate, string connectionId)
         {
             Max = max;
             Step = step;
             Rate = rate;
+            ConnectionId = connectionId;
         }
 
         public int Max { get; set; }
         public int Step { get; set; }
         public DataGenerationRate Rate { get; set; }
-}
+        public string ConnectionId { get; set; }
+    }
 }

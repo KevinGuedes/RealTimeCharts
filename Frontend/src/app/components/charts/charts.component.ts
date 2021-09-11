@@ -29,7 +29,7 @@ export class ChartsComponent implements OnInit {
   public generationRateKeys!: any[];
   public dataForm: FormGroup;
 
-  get formControl() {
+  public get formControl() {
     return this.dataForm.controls;
   }
 
