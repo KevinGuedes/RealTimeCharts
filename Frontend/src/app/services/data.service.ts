@@ -5,6 +5,7 @@ import { catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { GenerateHeartDataRequest } from './requests/generate-heart-data.request';
 import { DataGenerationRate } from '../models/data-generation-rate.enum';
+import { SignalrService } from './signalr.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,11 +15,12 @@ export class DataService {
   private _apiUrl: string = environment.dataApiUrl;
 
   constructor(
-    private _http: HttpClient,
+    private readonly _http: HttpClient,
+    private readonly _signalrService: SignalrService,
   ) { }
 
   public generateHeartData(max: number, step: number, rate: DataGenerationRate): Promise<void> {
-    const request = new GenerateHeartDataRequest(max, step, rate)
+    const request = new GenerateHeartDataRequest(max, step, rate, this._signalrService.GetConnectionId())
 
     return this._http.post<GenerateHeartDataRequest>(`${this._apiUrl}/heart`, request).pipe(
       map(response => response),
