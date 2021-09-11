@@ -26,6 +26,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly int _maxRetryAttempts;
+        private IModel _consumerChannel;
         private bool _exchangeCreated;
 
         public EventBus(
@@ -48,8 +49,7 @@ namespace RealTimeCharts.Infra.Bus
         public void Publish(Event @event)
         {
             _logger.LogInformation($"Creating channel to publish event");
-            if (!_busPersistentConnection.IsConnected)
-                _busPersistentConnection.StartPersistentConnection();
+            CheckConnection();
             using var channel = _busPersistentConnection.CreateChannel();
             _logger.LogInformation($"Channel created");
 
@@ -87,48 +87,80 @@ namespace RealTimeCharts.Infra.Bus
             where H : IEventHandler<E>
         {
             _subscriptionManager.AddSubscription<E, H>();
-            StartBasicConsume<E>();
+            _consumerChannel = CreateConsumerChannel();
+            BindQueueToEvent<E>();
+            StartBasicConsume();
         }
 
-        private void StartBasicConsume<E>() where E : Event
+        private void BindQueueToEvent<E>() where E : Event
         {
-            var factory = new ConnectionFactory()
+            string eventName = typeof(E).Name;
+            _logger.LogInformation($"Binding queue to receive {eventName}");
+            CheckConnection();
+
+            _consumerChannel.QueueBind(
+                            queue: _rabbitMqConfig.QueueName,
+                            exchange: _rabbitMqConfig.ExchangeName,
+                            routingKey: eventName);
+            _logger.LogInformation("Queue bound to exchange");
+        }
+
+        private void CreateExchange(IModel channel)
+        {
+            if (!_exchangeCreated)
             {
-                HostName = _rabbitMqConfig.HostName,
-                UserName = _rabbitMqConfig.UserName,
-                Password = _rabbitMqConfig.Password,
-                Port = _rabbitMqConfig.Port,
-                DispatchConsumersAsync = true
+                _logger.LogInformation("Creating exchange to publish events");
+                channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
+                _exchangeCreated = true;
+                _logger.LogInformation("Exchange created");
+            }
+        }
+
+        private IModel CreateConsumerChannel()
+        {
+            _logger.LogInformation($"Creating consumer channel");
+            CheckConnection();
+            var channel = _busPersistentConnection.CreateChannel();
+            CreateExchange(channel);
+            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
+                                 durable: true,
+                                 exclusive: false,
+                                 autoDelete: false,
+                                 arguments: null);
+
+            channel.CallbackException += (sender, ea) =>
+            {
+                _logger.LogWarning(ea.Exception, "Recreating consumer channel");
+                _consumerChannel.Dispose();
+                _consumerChannel = CreateConsumerChannel();
+                StartBasicConsume();
             };
 
-            var connection = factory.CreateConnection();
-            var channel = connection.CreateModel();
+            _logger.LogInformation($"Consumer channel created");
+            return channel;
+        }
 
-            if (!_exchangeCreated)
-                CreateExchange(channel);
+        private void CheckConnection()
+        {
+            if (!_busPersistentConnection.IsConnected)
+                _busPersistentConnection.StartPersistentConnection();
+        }
 
-            string eventName = typeof(E).Name;
-
-            channel.QueueDeclare(
-                queue: _rabbitMqConfig.QueueName,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null);
-
-            channel.QueueBind(
-                queue: _rabbitMqConfig.QueueName,
-                exchange: _rabbitMqConfig.ExchangeName,
-                routingKey: eventName);
-
-            var consumer = new AsyncEventingBasicConsumer(channel);
-
-            consumer.Received += Consumer_Received;
-
-            channel.BasicConsume(
-                queue: _rabbitMqConfig.QueueName,
-                autoAck: true,
-                consumer: consumer);
+        private void StartBasicConsume()
+        {
+            if (_consumerChannel != null)
+            {
+                _logger.LogInformation("Starting basic consume");
+                var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
+                consumer.Received += Consumer_Received;
+                _consumerChannel.BasicConsume(
+                    queue: _rabbitMqConfig.QueueName,
+                    autoAck: false,
+                    consumer: consumer);
+                _logger.LogInformation("Basic consume started");
+            }
+            else
+                _logger.LogError("Consumer channel not created");
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
@@ -144,6 +176,8 @@ namespace RealTimeCharts.Infra.Bus
             {
                 _logger.LogError($"Failed process event {eventName}: {ex.Message}");
             }
+
+            _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
 
         private async Task ProcessEvent(string eventName, string message)
@@ -165,17 +199,6 @@ namespace RealTimeCharts.Infra.Bus
                     var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
                 }
-            }
-        }
-
-        private void CreateExchange(IModel channel)
-        {
-            if (!_exchangeCreated)
-            {
-                _logger.LogInformation("Creating exchange to publish events");
-                channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
-                _exchangeCreated = true;
-                _logger.LogInformation("Exchange created");
             }
         }
     }

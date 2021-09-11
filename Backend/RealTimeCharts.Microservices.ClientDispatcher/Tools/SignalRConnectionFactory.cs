@@ -7,7 +7,7 @@ using System;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
 {
-    public class SignalRConnectionFactory
+    public static class SignalRConnectionFactory
     {
         public static HubConnection CreateHubConnection(HostBuilderContext hostContext, IServiceProvider sp)
         {

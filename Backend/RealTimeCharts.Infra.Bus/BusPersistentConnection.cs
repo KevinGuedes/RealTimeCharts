@@ -21,7 +21,6 @@ namespace RealTimeCharts.Infra.Bus
     public class BusPersistentConnection : IBusPersistentConnection
     {
         private readonly ILogger<BusPersistentConnection> _logger;
-        private readonly RabbitMQConfigurations _rabbitMqConfig;
         private readonly IConnectionFactory _connectionFactory;
         private readonly int _maxRetryAttempts;
         IConnection _connection;
@@ -30,12 +29,11 @@ namespace RealTimeCharts.Infra.Bus
 
         public BusPersistentConnection(
             ILogger<BusPersistentConnection> logger,
-            IOptions<RabbitMQConfigurations> rabbitMqConfig,
+            IConnectionFactory connectionFactory,
             int maxRetryAttempts = 5)
         {
             _logger = logger;
-            _rabbitMqConfig = rabbitMqConfig.Value;
-            _connectionFactory = CreateConnectionFactory();
+            _connectionFactory = connectionFactory;
             _maxRetryAttempts = maxRetryAttempts;
         }
 
@@ -62,18 +60,6 @@ namespace RealTimeCharts.Infra.Bus
             {
                 _logger.LogCritical($"Failed to dispose connection: {ex.Message}");
             }
-        }
-        
-        private IConnectionFactory CreateConnectionFactory()
-        {
-            return new ConnectionFactory()
-            {
-                HostName = _rabbitMqConfig.HostName,
-                UserName = _rabbitMqConfig.UserName,
-                Password = _rabbitMqConfig.Password,
-                Port = _rabbitMqConfig.Port,
-                DispatchConsumersAsync = true
-            };
         }
 
         public IModel CreateChannel()
