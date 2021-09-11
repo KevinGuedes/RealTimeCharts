@@ -4,8 +4,8 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RealTimeCharts.Domain.Interfaces;
-using RealTimeCharts.Infra.Configurations.Bus;
+using RealTimeCharts.Infra.Bus.Configurations;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System;
@@ -21,19 +21,26 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<EventBus> _logger;
         private readonly Dictionary<string, List<Type>> _handlers;
         private readonly List<Type> _eventTypes;
+
+
+        private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
+
         private bool _exchangeCreated;
 
         public EventBus(
             ILogger<EventBus> logger,
+            ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory, 
-            IOptions<RabbitMQConfigurations> rabbitMqConfig)
+            IOptions<RabbitMQConfigurations> rabbitMqConfig
+            )
         {
             _logger = logger;
+            _subscriptionManager = subscriptionManager;
+
             _serviceScopeFactory = serviceScopeFactory;
-            _handlers = new Dictionary<string, List<Type>>();
-            _eventTypes = new List<Type>();
+            
             _rabbitMqConfig = rabbitMqConfig.Value;
             _exchangeCreated = false;
         }
@@ -58,8 +65,10 @@ namespace RealTimeCharts.Infra.Bus
 
                 var message = JsonConvert.SerializeObject(@event);
                 var body = Encoding.UTF8.GetBytes(message);
+                var properties = channel.CreateBasicProperties();
+                properties.DeliveryMode = 2; 
 
-                channel.BasicPublish(_rabbitMqConfig.ExchangeName, eventName, null, body);
+                channel.BasicPublish(_rabbitMqConfig.ExchangeName, routingKey: eventName, basicProperties: properties, body: body);
             }
             catch(Exception ex)
             {
@@ -71,24 +80,12 @@ namespace RealTimeCharts.Infra.Bus
             where E : Event
             where H : IEventHandler<E>
         {
-            var eventName = typeof(E).Name;
-            var handlerType = typeof(H);
-
-            if (!_eventTypes.Contains(typeof(E)))
-                _eventTypes.Add(typeof(E));
-
-            if (!_handlers.ContainsKey(eventName))
-                _handlers.Add(eventName, new List<Type>());
-
-            if (_handlers[eventName].Any(s => s.GetType() == handlerType))
-                throw new ArgumentException($"Handler type {handlerType.Name} already is registered for {eventName}", nameof(handlerType));
-
-            _handlers[eventName].Add(handlerType);
+            _subscriptionManager.AddSubscription<E, H>();
 
             StartBasicConsume<E>();
         }
 
-        private void StartBasicConsume<TEvent>() where TEvent : Event
+        private void StartBasicConsume<E>() where E : Event
         {
             var factory = new ConnectionFactory()
             {
@@ -104,14 +101,14 @@ namespace RealTimeCharts.Infra.Bus
             if(!_exchangeCreated)
                 CreateExchange(channel);
 
-            string eventName = typeof(TEvent).Name;
+            string eventName = typeof(E).Name;
             channel.QueueDeclare(queue: _rabbitMqConfig.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
             channel.QueueBind(queue: _rabbitMqConfig.QueueName, exchange: _rabbitMqConfig.ExchangeName, routingKey: eventName);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
 
             consumer.Received += Consumer_Received;
-            channel.BasicConsume(queue: _rabbitMqConfig.QueueName, autoAck: true, consumer);
+            channel.BasicConsume(queue: _rabbitMqConfig.QueueName, autoAck: true, consumer: consumer);
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
@@ -121,27 +118,27 @@ namespace RealTimeCharts.Infra.Bus
 
             try
             {
-                await ProcessEvent(eventName, message).ConfigureAwait(false);
-
+                await ProcessEvent(eventName, message);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed process event: {ex.Message}");
+                _logger.LogError($"Failed process event {eventName}: {ex.Message}");
             }
         }
 
         private async Task ProcessEvent(string eventName, string message)
         {
-            if (_handlers.ContainsKey(eventName))
+            if (_subscriptionManager.HasSubscriptionsForEvent(eventName))
             {
                 using var scope = _serviceScopeFactory.CreateScope();
-                var subscriptions = _handlers[eventName];
+                var subscriptions = _subscriptionManager.GetHandlersForEvent(eventName);
+
                 foreach (var subscription in subscriptions)
                 {
                     var handler = scope.ServiceProvider.GetService(subscription);
                     if (handler == null) continue;
 
-                    var eventType = _eventTypes.SingleOrDefault(eventType => eventType.Name == eventName);
+                    var eventType = _subscriptionManager.GetEventTypeByName(eventName);
                     var @event = JsonConvert.DeserializeObject(message, eventType);
                     var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });

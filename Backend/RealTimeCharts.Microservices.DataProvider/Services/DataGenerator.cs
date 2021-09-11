@@ -10,6 +10,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
     {
         private readonly Dictionary<DataGenerationRate, int> _dataGenerationRate = new()
         {
+            [DataGenerationRate.Ultra] = 300,
             [DataGenerationRate.High] = 600,
             [DataGenerationRate.Medium] = 800,
             [DataGenerationRate.Low] = 1000

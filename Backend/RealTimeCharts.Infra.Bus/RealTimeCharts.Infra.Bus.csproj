@@ -17,8 +17,4 @@
     <ProjectReference Include="..\RealTimeCharts.Shared\RealTimeCharts.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interfaces\" />
-  </ItemGroup>
-
 </Project>

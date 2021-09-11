@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RealTimeCharts.Domain\RealTimeCharts.Domain.csproj" />
+    <ProjectReference Include="..\RealTimeCharts.Infra.Bus\RealTimeCharts.Infra.Bus.csproj" />
   </ItemGroup>
 
 </Project>

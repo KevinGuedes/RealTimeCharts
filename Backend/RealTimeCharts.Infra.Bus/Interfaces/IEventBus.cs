@@ -1,7 +1,7 @@
 ﻿using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 
-namespace RealTimeCharts.Domain.Interfaces
+namespace RealTimeCharts.Infra.Bus.Interfaces
 {
     public interface IEventBus
     {

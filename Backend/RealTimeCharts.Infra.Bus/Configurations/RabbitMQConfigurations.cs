@@ -1,4 +1,4 @@
-﻿namespace RealTimeCharts.Infra.Configurations.Bus
+﻿namespace RealTimeCharts.Infra.Bus.Configurations
 {
     public class RabbitMQConfigurations
     {

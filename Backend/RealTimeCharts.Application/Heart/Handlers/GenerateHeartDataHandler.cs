@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using OperationResult;
 using RealTimeCharts.Application.Heart.Requests;
 using RealTimeCharts.Domain.Events;
-using RealTimeCharts.Domain.Interfaces;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 

@@ -5,5 +5,6 @@
         Low,
         Medium,
         High,
+        Ultra,
     }
 }

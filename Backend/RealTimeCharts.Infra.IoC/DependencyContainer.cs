@@ -5,9 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RealTimeCharts.Application.Heart.Validators;
-using RealTimeCharts.Domain.Interfaces;
 using RealTimeCharts.Infra.Bus;
-using RealTimeCharts.Infra.Configurations.Bus;
+using RealTimeCharts.Infra.Bus.Configurations;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using System;
 using System.Reflection;
 
@@ -18,14 +18,16 @@ namespace RealTimeCharts.Infra.IoC
         public static void AddRabbitMQBus(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
+            services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
 
             services.AddSingleton<IEventBus, EventBus>(sp =>
             {
-                var eventBusLogger = sp.GetRequiredService<ILogger<EventBus>>();
+                var logger = sp.GetRequiredService<ILogger<EventBus>>();
+                var subcriptionsManager = sp.GetRequiredService<ISubscriptionManager>();
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
                 var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
 
-                return new(eventBusLogger, scopeFactory, options);
+                return new(logger, subcriptionsManager, scopeFactory, options);
             });
         }
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
