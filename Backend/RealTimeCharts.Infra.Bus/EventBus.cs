@@ -21,43 +21,39 @@ namespace RealTimeCharts.Infra.Bus
     public sealed class EventBus : IEventBus
     {
         private readonly ILogger<EventBus> _logger;
+        private readonly RabbitMQConfigurations _rabbitMqConfig;
+        private readonly IBusPersistentConnection _busPersistentConnection;
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private readonly RabbitMQConfigurations _rabbitMqConfig;
+        private readonly int _maxRetryAttempts;
         private bool _exchangeCreated;
 
         public EventBus(
             ILogger<EventBus> logger,
+            IOptions<RabbitMQConfigurations> rabbitMqConfig,
+            IBusPersistentConnection busPersistentConnection,
             ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory,
-            IOptions<RabbitMQConfigurations> rabbitMqConfig
-            )
+            int maxRetryAttempts = 5)
         {
             _logger = logger;
             _subscriptionManager = subscriptionManager;
+            _busPersistentConnection = busPersistentConnection;
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
+            _maxRetryAttempts = maxRetryAttempts;
             _exchangeCreated = false;
         }
 
         public void Publish(Event @event)
         {
-
             _logger.LogInformation($"Creating channel to publish event");
-            var factory = new ConnectionFactory()
-            {
-                HostName = _rabbitMqConfig.HostName,
-                UserName = _rabbitMqConfig.UserName,
-                Password = _rabbitMqConfig.Password,
-                Port = _rabbitMqConfig.Port
-            };
-
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
+            if (!_busPersistentConnection.IsConnected)
+                _busPersistentConnection.StartPersistentConnection();
+            using var channel = _busPersistentConnection.CreateChannel();
             _logger.LogInformation($"Channel created");
 
-            if (!_exchangeCreated)
-                CreateExchange(channel);
+            CreateExchange(channel);
 
             string eventName = @event.GetType().Name;
             _logger.LogInformation($"Serializing {eventName}");
@@ -65,13 +61,12 @@ namespace RealTimeCharts.Infra.Bus
             var body = Encoding.UTF8.GetBytes(message);
             _logger.LogInformation($"{eventName} serialized");
 
-
             _logger.LogInformation($"Publishing {eventName} with Id: {@event.Id}");
             var publishPolicy = RetryPolicy.Handle<BrokerUnreachableException>()
                 .Or<SocketException>()
-                .WaitAndRetry(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
+                .WaitAndRetry(_maxRetryAttempts, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                 {
-                    _logger.LogWarning(ex, $"Failed to publis {eventName} with Id {@event.Id} after {time.TotalSeconds:n1}s: ({ex.Message})");
+                    _logger.LogWarning(ex, $"Failed to publish {eventName} with Id {@event.Id} after {time.TotalSeconds:n1}s: ({ex.Message})");
                 });
 
             publishPolicy.Execute(() =>
@@ -102,6 +97,7 @@ namespace RealTimeCharts.Infra.Bus
                 HostName = _rabbitMqConfig.HostName,
                 UserName = _rabbitMqConfig.UserName,
                 Password = _rabbitMqConfig.Password,
+                Port = _rabbitMqConfig.Port,
                 DispatchConsumersAsync = true
             };
 
@@ -176,7 +172,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             if (!_exchangeCreated)
             {
-                _logger.LogInformation("Creating exchange");
+                _logger.LogInformation("Creating exchange to publish events");
                 channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
                 _exchangeCreated = true;
                 _logger.LogInformation("Exchange created");

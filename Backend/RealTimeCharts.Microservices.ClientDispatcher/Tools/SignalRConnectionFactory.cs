@@ -17,10 +17,10 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
                 .Build();
             
             connection.Closed += async error => {
-                await connection.StartPersistentAsync(logger);
+                await connection.StartPersistentConnectionAsync(logger);
             };
 
-            connection.StartPersistentAsync(logger).GetAwaiter().GetResult();
+            connection.StartPersistentConnectionAsync(logger).GetAwaiter().GetResult();
 
             return connection;
         }

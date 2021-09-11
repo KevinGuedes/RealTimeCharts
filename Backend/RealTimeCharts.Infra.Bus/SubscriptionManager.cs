@@ -1,11 +1,10 @@
-﻿using RealTimeCharts.Infra.Bus.Interfaces;
+﻿using RealTimeCharts.Infra.Bus.Exceptions;
+using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RealTimeCharts.Infra.Bus
 {
@@ -34,7 +33,7 @@ namespace RealTimeCharts.Infra.Bus
                 _handlers.Add(eventName, new List<Type>());
 
             if (_handlers[eventName].Any(s => s.GetType() == handlerType))
-                throw new ArgumentException($"Handler type {handlerType.Name} already is registered for {eventName}", nameof(handlerType));
+                throw new HandlerAlreadyRegisteredException($"Handler type {handlerType.Name} already is registered for {eventName}");
 
             _handlers[eventName].Add(handlerType);
         }

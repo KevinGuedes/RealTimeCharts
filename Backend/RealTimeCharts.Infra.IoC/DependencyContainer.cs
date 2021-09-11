@@ -27,7 +27,7 @@ namespace RealTimeCharts.Infra.IoC
                 var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
                 var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
 
-                return new(logger, subcriptionsManager, scopeFactory, options);
+                return new(logger, options, subcriptionsManager, scopeFactory);
             });
         }
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
