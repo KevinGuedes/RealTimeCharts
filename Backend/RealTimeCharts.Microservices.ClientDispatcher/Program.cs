@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RealTimeCharts.Infra.IoC;
+using RealTimeCharts.Microservices.ClientDispatcher.Handlers;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
 using RealTimeCharts.Microservices.ClientDispatcher.IoC;
 using RealTimeCharts.Microservices.ClientDispatcher.Services;
@@ -20,9 +21,8 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddTransient<HeartDataGeneratedEventHandler>();
                     services.AddRabbitMQBus(hostContext.Configuration);
-                    services.RegisterEventHandlers();
-
                     var sp = services.BuildServiceProvider();
                     services.AddSingleton<HubConnection>(sp => SignalRConnectionFactory.CreateHubConnection(hostContext, sp));
                     services.AddSingleton<IDispatcherService, DispatcherService>();

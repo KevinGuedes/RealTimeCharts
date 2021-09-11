@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RealTimeCharts.Infra.IoC;
+using RealTimeCharts.Microservices.DataProvider.Handlers;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Microservices.DataProvider.IoC;
 using RealTimeCharts.Microservices.DataProvider.Services;
@@ -18,11 +19,9 @@ namespace RealTimeCharts.Microservices.DataProvider
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddTransient<GenerateHeartDataEventHandler>();
                     services.AddRabbitMQBus(hostContext.Configuration);
-                    services.RegisterEventHandlers();
-
                     services.AddScoped<IDataGenerator, DataGenerator>();
-
                     services.AddHostedService<Worker>();
                 });
     }

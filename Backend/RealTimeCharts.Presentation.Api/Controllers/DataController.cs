@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace RealTimeCharts.Presentation.Api.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class DataController : CommonController
     {
         private readonly ILogger<DataController> _logger;
