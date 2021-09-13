@@ -19,7 +19,18 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
         public int GetSleepTimeByGenerationRate(DataGenerationRate rate)
             => _dataGenerationRate[rate];
 
-        public DataPoint GenerateHeartData(double name)
+        public DataPoint GenerateData(double name, DataType dataType)
+        {
+            switch (dataType)
+            {
+                case DataType.Heart:
+                    return GenerateHeartData(name);
+                default:
+                    return GenerateHeartData(name);
+            }
+        }
+
+        private DataPoint GenerateHeartData(double name)
         {
             var angle = Math.PI * name / 180.0;
             var value = Math.Round(Convert.ToDouble(3 - 1.5 * Math.Sin(angle) + Math.Cos(2 * angle) - 1.5 * Math.Abs(Math.Cos(angle))), 3);

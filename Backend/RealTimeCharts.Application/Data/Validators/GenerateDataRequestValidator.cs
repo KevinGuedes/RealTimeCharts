@@ -1,11 +1,11 @@
 ﻿using FluentValidation;
-using RealTimeCharts.Application.Heart.Requests;
+using RealTimeCharts.Application.Data.Requests;
 
-namespace RealTimeCharts.Application.Heart.Validators
+namespace RealTimeCharts.Application.Data.Validators
 {
-    public class GenerateHeartDataRequestValidator : AbstractValidator<GenerateHeartDataRequest>
+    public class GenerateDataRequestValidator : AbstractValidator<GenerateDataRequest>
     {
-        public GenerateHeartDataRequestValidator()
+        public GenerateDataRequestValidator()
         {
             RuleFor(request => request.Max)
                 .GreaterThan(0).WithMessage("Maximum value must be greater than 0");

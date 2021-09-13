@@ -34,7 +34,7 @@ export class SignalrService {
   }
 
   private onHeartDataReceived(): void {
-    this._hubConnection.on("HeartData", (data: string) => {
+    this._hubConnection.on("SendData", (data: string) => {
       const dataPoint = new DataPoint(JSON.parse(data));
       this.heartDataReceived.emit(dataPoint);
     })

@@ -3,9 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from "rxjs";
 import { catchError, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { GenerateHeartDataRequest } from './requests/generate-heart-data.request';
+import { GenerateDataRequest } from './requests/generate-data.request';
 import { DataGenerationRate } from '../models/data-generation-rate.enum';
 import { SignalrService } from './signalr.service';
+import { DataType } from '../models/data-type.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -19,10 +20,10 @@ export class DataService {
     private readonly _signalrService: SignalrService,
   ) { }
 
-  public generateHeartData(max: number, step: number, rate: DataGenerationRate): Promise<void> {
-    const request = new GenerateHeartDataRequest(max, step, rate, this._signalrService.GetConnectionId())
+  public generateData(max: number, step: number, rate: DataGenerationRate, dataType: DataType): Promise<void> {
+    const request = new GenerateDataRequest(max, step, rate, dataType, this._signalrService.GetConnectionId())
 
-    return this._http.post<GenerateHeartDataRequest>(`${this._apiUrl}/heart`, request).pipe(
+    return this._http.post<GenerateDataRequest>(`${this._apiUrl}/generate`, request).pipe(
       map(response => response),
       catchError(error => this.errorHandler(error))
     ).toPromise();

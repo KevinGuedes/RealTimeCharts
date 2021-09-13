@@ -18,10 +18,10 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Services
             _logger = logger;
         }
 
-        public async Task DispatchHeartData(DataPoint dataPoint, string connectionId)
+        public async Task DispatchData(DataPoint dataPoint, string connectionId)
         {
-            _logger.LogInformation($"Dispatching heart data point {dataPoint} to client with id {connectionId}");
-            await _hubConnection.InvokeAsync("HeartData", JsonConvert.SerializeObject(dataPoint, Formatting.Indented), connectionId);
+            _logger.LogInformation($"Dispatching data point {dataPoint} to client with id {connectionId}");
+            await _hubConnection.InvokeAsync("SendData", JsonConvert.SerializeObject(dataPoint, Formatting.Indented), connectionId);
         }
     }
 }

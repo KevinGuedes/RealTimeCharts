@@ -27,7 +27,7 @@ namespace RealTimeCharts.Microservices.DataProvider
             {
                 if (!_isListeningToEvents)
                 {
-                    _eventBus.Subscribe<GenerateHeartDataEvent, GenerateHeartDataEventHandler>();
+                    _eventBus.Subscribe<GenerateDataEvent, GenerateDataEventHandler>();
                     _isListeningToEvents = true;
                 }
 

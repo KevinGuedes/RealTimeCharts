@@ -27,7 +27,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
             {
                 if (!_isListeningToEvents)
                 {
-                    _eventBus.Subscribe<HeartDataGeneratedEvent, HeartDataGeneratedEventHandler>();
+                    _eventBus.Subscribe<DataGeneratedEvent, DataGeneratedEventHandler>();
                     _isListeningToEvents = true;
                 }
 
