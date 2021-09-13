@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using RealTimeCharts.Application.Heart.Requests;
+using RealTimeCharts.Application.Data.Requests;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,15 +16,15 @@ namespace RealTimeCharts.Presentation.Api.Controllers
         public DataController(ILogger<DataController> logger, IMediator mediator) : base(mediator)
             => _logger = logger;
 
-        [HttpPost("heart")]
-        public async Task<IActionResult> GenerateHeartData([FromBody] GenerateHeartDataRequest generateHeartDataRequest, CancellationToken cancellationToken)
+        [HttpPost("generate")]
+        public async Task<IActionResult> GenerateData([FromBody] GenerateDataRequest generateDataRequest, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Generate Heart Data endpoint accessed");
+            _logger.LogInformation("Generate Data endpoint accessed");
             
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            return await SendCommand(generateHeartDataRequest, cancellationToken);
+            return await SendCommand(generateDataRequest, cancellationToken);
         }
     }
 }

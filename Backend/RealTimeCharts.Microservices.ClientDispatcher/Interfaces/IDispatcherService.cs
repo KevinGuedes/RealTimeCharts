@@ -5,6 +5,6 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Interfaces
 {
     public interface IDispatcherService
     {
-        Task DispatchHeartData(DataPoint dataPoint, string connectionId);
+        Task DispatchData(DataPoint dataPoint, string connectionId);
     }
 }

@@ -20,7 +20,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddTransient<HeartDataGeneratedEventHandler>();
+                    services.AddTransient<DataGeneratedEventHandler>();
                     services.AddRabbitMQBus(hostContext.Configuration);
                     var sp = services.BuildServiceProvider();
                     services.AddSingleton<HubConnection>(sp => SignalRConnectionFactory.CreateHubConnection(hostContext, sp));

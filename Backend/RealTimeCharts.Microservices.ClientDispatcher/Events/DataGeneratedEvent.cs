@@ -3,9 +3,9 @@ using RealTimeCharts.Domain.Models;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Events
 {
-    public class HeartDataGeneratedEvent : Event
+    public class DataGeneratedEvent : Event
     {
-        public HeartDataGeneratedEvent(DataPoint dataPoint, string connectionId)
+        public DataGeneratedEvent(DataPoint dataPoint, string connectionId)
         {
             DataPoint = dataPoint;
             ConnectionId = connectionId;

@@ -6,7 +6,7 @@ namespace RealTimeCharts.Presentation.SignalR.Hubs
 {
     public class DataHub : Hub<IDataHub>, IDataHub
     {
-        public Task HeartData(string heartData, string connectionId)
-            => Clients.Client(connectionId).HeartData(heartData, connectionId);
+        public Task SendData(string data, string connectionId)
+            => Clients.Client(connectionId).SendData(data, connectionId);
     }
 }

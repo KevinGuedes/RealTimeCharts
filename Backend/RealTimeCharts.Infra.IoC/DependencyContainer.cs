@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using RealTimeCharts.Application.Heart.Validators;
+using RealTimeCharts.Application.Data.Validators;
 using RealTimeCharts.Infra.Bus;
 using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Interfaces;
@@ -47,6 +47,6 @@ namespace RealTimeCharts.Infra.IoC
             => services.AddMediatR(AppDomain.CurrentDomain.Load("RealTimeCharts.Application"));
 
         public static void ConfigureValidators(this IServiceCollection services)
-            => services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<GenerateHeartDataRequestValidator>());
+            => services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<GenerateDataRequestValidator>());
     }
 }

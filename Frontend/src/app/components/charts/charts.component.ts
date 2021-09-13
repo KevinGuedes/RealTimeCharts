@@ -74,7 +74,8 @@ export class ChartsComponent implements OnInit {
     const rate = this.dataForm.value.rate;
     const type = this.dataForm.value.type;
 
-    await this._dataService.generateHeartData(360, 10, rate)
+    console.log(type)
+    await this._dataService.generateData(360, 10, rate, type)
       .then(() => {
         console.log("Heart data generation started")
       })

@@ -5,7 +5,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Interfaces
 {
     public interface IDataGenerator
     {
-        public DataPoint GenerateHeartData(double x);
+        public DataPoint GenerateData(double name, DataType dataType);
         public int GetSleepTimeByGenerationRate(DataGenerationRate rate);
     }
 }
