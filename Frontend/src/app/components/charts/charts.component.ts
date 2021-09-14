@@ -14,19 +14,22 @@ import { SignalrService } from 'src/app/services/signalr.service';
 })
 export class ChartsComponent implements OnInit {
 
-  public data: any[] = [{ name: "Heart", series: [] }];
+  //#region Chart Setup
+  public data: any[] = [{ name: "Data", series: [] }];
   public view: [number, number] = [900, 350];
   public curve: DShape.CurveFactory = DShape.curveBasis;
   public colorSchemeLine = { domain: ['#7aa3e5'] };
   public colorSchemePolar = { domain: ['#eb4646'] };
   public colorSchemeNumber = { domain: ['#192f36'] };
-  public legendTitle: string = 'Data';
+  public legendTitle: string = 'Legend';
   public yLabelName: string = 'Value';
-  public dataCounter: number = 0;
+  //#endregion
+
   public dataTypes = DataType;
-  public dataTypeKeys!: any[];
   public generationRate = DataGenerationRate;
   public generationRateKeys!: any[];
+  public dataTypeKeys!: any[];
+  public dataCounter: number = 0;
   public dataForm: FormGroup;
 
   public get formControl() {
