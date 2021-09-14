@@ -13,13 +13,13 @@ export class SignalrService {
     .withUrl(this._hubUrl)
     .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
     .build();
-  public heartDataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
+  public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
   private _isConnected: boolean = false;
   private _connectionId!: string;
 
   constructor() {
     this.startConnection();
-    this.onHeartDataReceived();
+    this.onDataReceived();
     this._hubConnection.onclose(async () => {
       this._isConnected = false;
       await this.startConnection();
@@ -33,10 +33,10 @@ export class SignalrService {
     });
   }
 
-  private onHeartDataReceived(): void {
+  private onDataReceived(): void {
     this._hubConnection.on("SendData", (data: string) => {
       const dataPoint = new DataPoint(JSON.parse(data));
-      this.heartDataReceived.emit(dataPoint);
+      this.dataReceived.emit(dataPoint);
     })
   }
 

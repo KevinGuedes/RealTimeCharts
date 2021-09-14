@@ -20,8 +20,8 @@ export class DataService {
     private readonly _signalrService: SignalrService,
   ) { }
 
-  public generateData(max: number, step: number, rate: DataGenerationRate, dataType: DataType): Promise<void> {
-    const request = new GenerateDataRequest(max, step, rate, dataType, this._signalrService.GetConnectionId())
+  public generateData(rate: DataGenerationRate, dataType: DataType): Promise<void> {
+    const request = new GenerateDataRequest(rate, dataType, this._signalrService.GetConnectionId())
 
     return this._http.post<GenerateDataRequest>(`${this._apiUrl}/generate`, request).pipe(
       map(response => response),

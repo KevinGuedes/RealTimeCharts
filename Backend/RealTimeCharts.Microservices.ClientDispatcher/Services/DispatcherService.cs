@@ -18,10 +18,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Services
             _logger = logger;
         }
 
-        public async Task DispatchData(DataPoint dataPoint, string connectionId)
-        {
-            _logger.LogInformation($"Dispatching data point {dataPoint} to client with id {connectionId}");
-            await _hubConnection.InvokeAsync("SendData", JsonConvert.SerializeObject(dataPoint, Formatting.Indented), connectionId);
-        }
+        public Task DispatchData(DataPoint dataPoint, string connectionId)
+            => _hubConnection.InvokeAsync("SendData", JsonConvert.SerializeObject(dataPoint, Formatting.Indented), connectionId);
     }
 }

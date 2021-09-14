@@ -20,7 +20,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
 
         public async Task<Result> Handle(DataGeneratedEvent @event)
         {
-            _logger.LogInformation($"Dispatching {@event.DataPoint} data point to client");
+            _logger.LogInformation($"Dispatching data point {@event.DataPoint} to client with id {@event.ConnectionId}");
             await _dispatcherService.DispatchData(@event.DataPoint, @event.ConnectionId);
             return Result.Success();
         }

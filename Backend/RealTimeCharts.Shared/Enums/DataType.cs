@@ -3,5 +3,7 @@
     public enum DataType: int
     {
         Heart,
+        Polynomial,
+        Logarithmic
     }
 }

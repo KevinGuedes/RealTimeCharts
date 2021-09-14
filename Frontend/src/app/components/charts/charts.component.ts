@@ -40,7 +40,7 @@ export class ChartsComponent implements OnInit {
     this.dataTypeKeys = Object.keys(this.dataTypes).filter(type => !isNaN(Number(type))).map(Number);
     this.generationRateKeys = Object.keys(this.generationRate).filter(type => !isNaN(Number(type))).map(Number);
 
-    this._signalrService.heartDataReceived.subscribe(dataPoint => {
+    this._signalrService.dataReceived.subscribe(dataPoint => {
       this.dataCounter++;
       this.pushData(dataPoint);
     })
@@ -71,13 +71,9 @@ export class ChartsComponent implements OnInit {
   }
 
   public async generateData(): Promise<void> {
-    const rate = this.dataForm.value.rate;
-    const type = this.dataForm.value.type;
-
-    console.log(type)
-    await this._dataService.generateData(360, 10, rate, type)
+    await this._dataService.generateData(this.dataForm.value.rate, this.dataForm.value.type)
       .then(() => {
-        console.log("Heart data generation started")
+        console.log(`${DataType[this.dataForm.value.type]} Data generation started`)
       })
       .catch(error => console.error(error.message));
   }
