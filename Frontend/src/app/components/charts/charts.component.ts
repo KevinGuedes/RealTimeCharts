@@ -43,7 +43,7 @@ export class ChartsComponent implements OnInit {
     this.dataTypeKeys = Object.keys(this.dataTypes).filter(type => !isNaN(Number(type))).map(Number);
     this.generationRateKeys = Object.keys(this.generationRate).filter(type => !isNaN(Number(type))).map(Number);
 
-    this._signalrService.dataReceived.subscribe(dataPoint => {
+    this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
       this.dataCounter++;
       this.pushData(dataPoint);
     })
