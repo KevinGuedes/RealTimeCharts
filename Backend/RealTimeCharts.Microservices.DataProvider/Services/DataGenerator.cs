@@ -22,6 +22,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Heart] = new(0, 360, 5),
             [DataType.Polynomial] = new(-4, 7, 0.5),
             [DataType.Logarithmic] = new(0, 10, 0.2),
+            [DataType.Weibull] = new(0, 5, 0.1),
         };
 
         public int GetSleepTimeByGenerationRate(DataGenerationRate rate)
@@ -37,6 +38,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
                 DataType.Heart => GenerateHeartData(name),
                 DataType.Polynomial => GeneratePolynomialData(name),
                 DataType.Logarithmic => GenerateLogarithmicData(name),
+                DataType.Weibull => GenerateWeibullData(name),
                 _ => GenerateHeartData(name),
             };
         }
@@ -53,5 +55,12 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
 
         private static DataPoint GenerateLogarithmicData(double name)
             => new(name, Math.Pow(name + 1, 2) * Math.Log(name + 1));
+
+        private static DataPoint GenerateWeibullData(double name)
+        {
+            double shape = 3;
+            double scale = 2;
+            return new(name, (shape / shape) * Math.Pow(name / scale, shape - 1) * Math.Pow(Math.E, Math.Pow(-name / scale, shape)));
+        }
     }
 }

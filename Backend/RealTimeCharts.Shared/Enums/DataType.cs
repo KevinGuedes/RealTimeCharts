@@ -4,6 +4,7 @@
     {
         Heart,
         Polynomial,
-        Logarithmic
+        Logarithmic,
+        Weibull,
     }
 }
