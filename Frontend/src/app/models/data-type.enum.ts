@@ -3,4 +3,5 @@ export enum DataType {
     Polynomial,
     Logarithmic,
     Weibull,
+    BS,
 }

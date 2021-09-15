@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using RealTimeCharts.Application.Data.Requests;
+using RealTimeCharts.Shared.Enums;
+using System;
 
 namespace RealTimeCharts.Application.Data.Validators
 {
@@ -8,7 +10,8 @@ namespace RealTimeCharts.Application.Data.Validators
         public GenerateDataRequestValidator()
         {
             RuleFor(request => request.DataType)
-                .NotNull().WithMessage("Data Type must not be null or empty");
+                .NotNull().WithMessage("Data Type must not be null or empty")
+                .Must(dataType => Enum.IsDefined(typeof(DataType), dataType)).WithMessage("Invalid data type");
 
             RuleFor(request => request.ConnectionId)
                 .NotEmpty().WithMessage("Connection Id with SignalR must not be null or empty");

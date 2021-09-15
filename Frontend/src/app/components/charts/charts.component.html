@@ -6,8 +6,8 @@
       <mat-form-field>
         <mat-label>Data Type</mat-label>
         <mat-select formControlName="type">
-          <mat-option *ngFor="let key of dataTypeKeys" [value]="key" required>
-            {{dataTypes[key]}}
+          <mat-option *ngFor="let entry of dataTypeNameEntries" [value]="entry[0]" required>
+            {{entry[1]}}
           </mat-option>
         </mat-select>
         <mat-error *ngIf="formControl.type.touched && formControl.type.invalid">
