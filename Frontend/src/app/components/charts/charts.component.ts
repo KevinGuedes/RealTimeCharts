@@ -87,7 +87,6 @@ export class ChartsComponent implements OnInit {
 
   public clearData(): void {
     this.data = []
-    this.data = [...this.data];
     this.dataCounter = 0;
   }
 

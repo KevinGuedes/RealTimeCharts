@@ -13,9 +13,9 @@ export class SignalrService {
     .withUrl(this._hubUrl)
     .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
     .build();
-  public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
   private _isConnected: boolean = false;
   private _connectionId!: string;
+  public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
 
   constructor() {
     this.startConnection();

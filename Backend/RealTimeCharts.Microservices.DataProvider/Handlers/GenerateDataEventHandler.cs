@@ -33,7 +33,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
 
                 for (double i = optimalSetup.Min; i <= optimalSetup.Max; i += optimalSetup.Step)
                 {
-                    var dataPoint = _dataGenerator.GenerateData(Convert.ToDouble(i), @event.DataType);
+                    var dataPoint = _dataGenerator.GenerateData(i, @event.DataType);
 
                     _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
                     _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));

@@ -5,6 +5,7 @@
         Heart,
         Polynomial,
         Logarithmic,
+        Fibonacci,
         Weibull,
     }
 }

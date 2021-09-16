@@ -22,6 +22,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Heart] = new(0, 360, 5),
             [DataType.Polynomial] = new(-4, 7, 0.5),
             [DataType.Logarithmic] = new(0, 10, 0.2),
+            [DataType.Fibonacci] = new(1, 30, 1),
             [DataType.Weibull] = new(0, 5, 0.1),
         };
 
@@ -38,8 +39,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
                 DataType.Heart => GenerateHeartData(name),
                 DataType.Polynomial => GeneratePolynomialData(name),
                 DataType.Logarithmic => GenerateLogarithmicData(name),
+                DataType.Fibonacci => GenerateFibonacciData(name),
                 DataType.Weibull => GenerateWeibullData(name),
-                _ => GenerateHeartData(name),
+                _ => throw new ArgumentException("Invalid Data Type")
             };
         }
 
@@ -61,6 +63,21 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             double shape = 3;
             double scale = 2;
             return new(name, (shape / shape) * Math.Pow(name / scale, shape - 1) * Math.Pow(Math.E, Math.Pow(-name / scale, shape)));
+        }
+
+        private static DataPoint GenerateFibonacciData(double name)
+        {
+            int a = 0, b = 1, c = 0;
+            int n = Convert.ToInt32(name);
+
+            for (int i = 2; i <= n; i++)
+            {
+                c = a + b;
+                a = b;
+                b = c;
+            }
+
+            return new(n, b);
         }
     }
 }
