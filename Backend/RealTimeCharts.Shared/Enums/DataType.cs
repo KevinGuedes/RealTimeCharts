@@ -7,5 +7,7 @@
         Logarithmic,
         Fibonacci,
         Weibull,
+        BirbaumSaunders,
+        Dagum,
     }
 }

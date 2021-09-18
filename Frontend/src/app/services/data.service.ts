@@ -36,7 +36,7 @@ export class DataService {
     return throwError(error)
   }
 
-  private getDataTypeByDataTypeName(name: DataTypeName): DataType {
+  public getDataTypeByDataTypeName(name: DataTypeName): DataType {
     const dataTypeNameKey = this.getEnumKeyByEnumValue(DataTypeName, name) as keyof typeof DataType;
     return DataType[dataTypeNameKey];
   }

@@ -19,8 +19,8 @@ export class ChartsComponent implements OnInit {
   public data: any[] = [];
   public view: [number, number] = [900, 350];
   public curve: DShape.CurveFactory = DShape.curveBasis;
-  public colorSchemeLine = { domain: ['#7aa3e5'] };
-  public colorSchemePolar = { domain: ['#eb4646'] };
+  public colorSchemeLine = { domain: new Array<string>() };
+  public colorSchemePolar = { domain: new Array<string>() };
   public legendTitle: string = 'Legend';
   public yLabelName: string = 'Value';
   //#endregion
@@ -29,9 +29,9 @@ export class ChartsComponent implements OnInit {
   public generationRateKeys!: any[];
   public dataTypeName = DataTypeName;
   public dataTypes = DataType;
-  public dataTypeNameEntries!: any[];
+  public dataTypeNameKeys!: any[];
   public dataCounter: number = 0;
-  public dataForm: FormGroup;
+  public dataForm!: FormGroup;
 
   public get formControl() {
     return this.dataForm.controls;
@@ -40,20 +40,11 @@ export class ChartsComponent implements OnInit {
   constructor(
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
-  ) {
+  ) { }
 
-    this.dataTypeNameEntries = Object.keys(DataTypeName);
+  ngOnInit(): void {
+    this.dataTypeNameKeys = Object.keys(DataTypeName);
     this.generationRateKeys = Object.keys(this.generationRate).filter(key => !isNaN(Number(key))).map(Number);
-
-    // console.log(this.dataTypeNameEntries)
-    // Object.entries(DataTypeName).map(([key, value]) => {
-    //   console.log(key as keyof typeof DataTypeName)
-    //   // console.log(DataTypeName[key as keyof typeof DataTypeName])
-    // })
-    // // for (let key in DataTypeName) {
-    // //   console.log(key);
-    // //   console.log(DataTypeName[key as keyof typeof DataTypeName])
-    // // }
 
     this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
       this.dataCounter++;
@@ -68,9 +59,6 @@ export class ChartsComponent implements OnInit {
         Validators.required,
       ]),
     });
-  }
-
-  ngOnInit(): void {
   }
 
   public onSelect(data: any): void {
@@ -93,18 +81,33 @@ export class ChartsComponent implements OnInit {
     const selectedDataTypeName = this.dataTypeNameByKey(this.dataForm.value.type);
     this.data.push({ name: selectedDataTypeName, series: [] })
 
+    if (this.dataForm.value.type == 'Heart')
+      this.appendRandomColorToColorScheme('#eb4646');
+    else
+      this.appendRandomColorToColorScheme();
+
     await this._dataService.generateData(this.dataForm.value.rate, this.dataForm.value.type)
       .then(_ => console.log(`${selectedDataTypeName} Data generation started`))
       .catch(error => console.error(error.message));
   }
 
   public clearData(): void {
+    this.colorSchemeLine.domain = new Array<string>();
+    this.colorSchemePolar.domain = new Array<string>();
     this.data = []
     this.dataCounter = 0;
   }
 
+  private appendRandomColorToColorScheme(color?: string): void {
+    const randomColor = color ? color : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    console.log(randomColor);
+    this.colorSchemeLine.domain.push(randomColor);
+    this.colorSchemePolar.domain.push(randomColor);
+  }
+
   private pushData(dataPoint: DataPoint): void {
-    this.data[0].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
+    let currentSerieIndex = this.data.length - 1;
+    this.data[currentSerieIndex].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
     this.data = [...this.data];
   }
 }

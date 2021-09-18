@@ -23,7 +23,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Polynomial] = new(-4, 7, 0.5),
             [DataType.Logarithmic] = new(0, 10, 0.2),
             [DataType.Fibonacci] = new(1, 30, 1),
-            [DataType.Weibull] = new(0, 5, 0.1),
+            [DataType.Weibull] = new(0, 16, 0.4),
+            [DataType.BirbaumSaunders] = new(0.1, 16, 0.4),
+            [DataType.Dagum] = new(0, 16, 0.4),
         };
 
         public int GetSleepTimeByGenerationRate(DataGenerationRate rate)
@@ -41,6 +43,8 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
                 DataType.Logarithmic => GenerateLogarithmicData(name),
                 DataType.Fibonacci => GenerateFibonacciData(name),
                 DataType.Weibull => GenerateWeibullData(name),
+                DataType.BirbaumSaunders => GenerateBirbaunSaundersData(name),
+                DataType.Dagum => GenerateDagumData(name),
                 _ => throw new ArgumentException("Invalid Data Type")
             };
         }
@@ -60,9 +64,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
 
         private static DataPoint GenerateWeibullData(double name)
         {
-            double shape = 3;
-            double scale = 2;
-            return new(name, (shape / shape) * Math.Pow(name / scale, shape - 1) * Math.Pow(Math.E, Math.Pow(-name / scale, shape)));
+            double shape = 3.24;
+            double scale = 5.4;
+            return new(name, (shape / scale) * Math.Pow(name / scale, shape - 1) * Math.Pow(Math.E, -1 * Math.Pow(name / scale, shape)));
         }
 
         private static DataPoint GenerateFibonacciData(double name)
@@ -78,6 +82,28 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             }
 
             return new(n, b);
+        }
+
+        private static DataPoint GenerateBirbaunSaundersData(double name)
+        {
+            double shape = 0.5;
+            double scale = 5;
+            double firstTerm = Math.Pow(Math.E, (-1 / (2 * Math.Pow(shape, 2))) * (name / scale + scale / name - 2));
+            double secondTerm = Math.Pow(scale / name, 0.5) + Math.Pow(scale / name, 1.5);
+            double thirdTerm = 2 * Math.Sqrt(2 * Math.PI) * shape * scale;
+
+            return new(name, firstTerm * secondTerm / thirdTerm);
+        }
+
+        private static DataPoint GenerateDagumData(double name)
+        {
+            double shape = 0.2;
+            double secondShape = 8.7;
+            double scale = 7.9;
+            double firstTerm = shape * secondShape * Math.Pow(name / scale, shape * secondShape - 1);
+            double secondTerm = scale * Math.Pow(1 + Math.Pow(name / scale, secondShape), shape + 1);
+
+            return new(name, firstTerm / secondTerm);
         }
     }
 }
