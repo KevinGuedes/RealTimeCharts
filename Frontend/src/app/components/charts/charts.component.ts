@@ -123,7 +123,7 @@ export class ChartsComponent implements OnInit {
   }
 
   private appendColorsToColorSchemes(color?: string): void {
-    const randomColor = color ? color : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    const randomColor = color ? color : `rgb(${Math.floor(Math.random() * 256)}, ${100 + Math.floor(Math.random() * 256)}, ${50 + Math.floor(Math.random() * 256)})`;
     this.colorSchemeLine.domain.push(randomColor);
     this.colorSchemePolar.domain.push(randomColor);
   }
