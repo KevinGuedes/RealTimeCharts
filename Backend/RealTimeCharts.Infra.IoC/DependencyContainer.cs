@@ -40,6 +40,7 @@ namespace RealTimeCharts.Infra.IoC
                 return new(logger, options, busPersistentConnection, subcriptionsManager, scopeFactory);
             });
         }
+
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
             => services.AddMediatR(assemblies);
 

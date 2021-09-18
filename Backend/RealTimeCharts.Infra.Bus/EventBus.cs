@@ -97,6 +97,7 @@ namespace RealTimeCharts.Infra.Bus
             string eventName = typeof(E).Name;
             _logger.LogInformation($"Binding queue to receive {eventName}");
             CheckConnection();
+            var response = _consumerChannel.QueueDeclarePassive("data-providfsdder");
 
             _consumerChannel.QueueBind(
                             queue: _rabbitMqConfig.QueueName,
@@ -132,7 +133,7 @@ namespace RealTimeCharts.Infra.Bus
             channel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Recreating consumer channel");
-                _consumerChannel.Dispose();
+                _consumerChannel.Dispose(); //para o chanel que foi criado ou seja channel ao i'nvés de _consumerChannel
                 _consumerChannel = CreateConsumerChannel();
                 StartBasicConsume(channel);
             };
