@@ -1,7 +1,8 @@
-﻿using RealTimeCharts.Domain.Models;
-using RealTimeCharts.Microservices.DataProvider.Domain;
+﻿using RealTimeCharts.Microservices.DataProvider.Domain;
+using RealTimeCharts.Microservices.DataProvider.Exceptions;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Shared.Enums;
+using RealTimeCharts.Shared.Models;
 using System;
 using System.Collections.Generic;
 
@@ -45,7 +46,8 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
                 DataType.Weibull => GenerateWeibullData(name),
                 DataType.BirbaumSaunders => GenerateBirbaunSaundersData(name),
                 DataType.Dagum => GenerateDagumData(name),
-                _ => throw new ArgumentException("Invalid Data Type")
+                DataType.Invalid => GenerateInvalidData(name),
+                _ => throw new InvalidDataTypeException("Invalid Data Type")
             };
         }
 
@@ -105,5 +107,8 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
 
             return new(name, firstTerm / secondTerm);
         }
+
+        private static DataPoint GenerateInvalidData(double name)
+            => new(name, double.NaN);
     }
 }

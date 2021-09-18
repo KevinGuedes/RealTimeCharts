@@ -1,12 +1,12 @@
 ﻿using RealTimeCharts.Shared.Events;
 
-namespace RealTimeCharts.Microservices.DataProvider.Events
+namespace RealTimeCharts.Microservices.ClientDispatcher.Events
 {
     public class DataGenerationFinishedEvent : Event
     {
         public DataGenerationFinishedEvent(string connectionId, bool success)
         {
-           ConnectionId = connectionId;
+            ConnectionId = connectionId;
             Success = success;
         }
 

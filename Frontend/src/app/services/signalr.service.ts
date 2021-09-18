@@ -16,10 +16,11 @@ export class SignalrService {
   private _isConnected: boolean = false;
   private _connectionId!: string;
   public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
+  public dataGenerationFinished: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor() {
     this.startConnection();
-    this.onDataReceived();
+    this.subscribeToEvents();
     this._hubConnection.onclose(async () => {
       this._isConnected = false;
       await this.startConnection();
@@ -33,10 +34,21 @@ export class SignalrService {
     });
   }
 
+  private subscribeToEvents(): void {
+    this.onDataReceived();
+    this.onDataGenerationFinished();
+  }
+
   private onDataReceived(): void {
-    this._hubConnection.on("SendData", (data: string) => {
+    this._hubConnection.on("DataPointDispatched", (data: string) => {
       const dataPoint = new DataPoint(JSON.parse(data));
       this.dataReceived.emit(dataPoint);
+    })
+  }
+
+  private onDataGenerationFinished(): void {
+    this._hubConnection.on("DataGenerationFinishedNotificationDispatched", data => {
+      this.dataGenerationFinished.emit(true);
     })
   }
 

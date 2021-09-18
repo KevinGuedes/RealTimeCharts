@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RealTimeCharts.Domain.Models
+namespace RealTimeCharts.Shared.Models
 {
     public class DataPoint
     {
@@ -12,6 +12,13 @@ namespace RealTimeCharts.Domain.Models
 
         public double Name { get; }
         public double Value { get; }
+        public bool IsValid
+        {
+            get
+            {
+                return !Double.IsNaN(Name) && !Double.IsNaN(Value); ;
+            }
+        }
 
         public override string ToString() => $"({Name}, {Value})";
     }

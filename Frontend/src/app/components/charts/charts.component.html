@@ -30,7 +30,7 @@
 
     <section class="charts__form-container__actions">
       <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
-      <button mat-raised-button color="primary" (click)="generateData()" [disabled]="dataForm.invalid">Generate Data</button>
+      <button mat-raised-button color="primary" (click)="generateData()" [disabled]="dataForm.invalid || isReceivingData">Generate Data</button>
     </section>
   </section>
 

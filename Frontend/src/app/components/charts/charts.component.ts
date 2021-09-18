@@ -27,11 +27,10 @@ export class ChartsComponent implements OnInit {
 
   public generationRate = DataGenerationRate;
   public generationRateKeys!: any[];
-  public dataTypeName = DataTypeName;
-  public dataTypes = DataType;
   public dataTypeNameKeys!: any[];
   public dataCounter: number = 0;
   public dataForm!: FormGroup;
+  public isReceivingData: boolean = false;
 
   public get formControl() {
     return this.dataForm.controls;
@@ -45,11 +44,8 @@ export class ChartsComponent implements OnInit {
   ngOnInit(): void {
     this.dataTypeNameKeys = Object.keys(DataTypeName);
     this.generationRateKeys = Object.keys(this.generationRate).filter(key => !isNaN(Number(key))).map(Number);
+    this.subscribeToSignalREvents();
 
-    this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
-      this.dataCounter++;
-      this.pushData(dataPoint);
-    })
 
     this.dataForm = new FormGroup({
       type: new FormControl(null, [
@@ -78,13 +74,14 @@ export class ChartsComponent implements OnInit {
   }
 
   public async generateData(): Promise<void> {
+    this.isReceivingData = true;
     const selectedDataTypeName = this.dataTypeNameByKey(this.dataForm.value.type);
     this.data.push({ name: selectedDataTypeName, series: [] })
 
     if (this.dataForm.value.type == 'Heart')
-      this.appendRandomColorToColorScheme('#eb4646');
+      this.appendColorsToColorSchemes('#eb4646');
     else
-      this.appendRandomColorToColorScheme();
+      this.appendColorsToColorSchemes();
 
     await this._dataService.generateData(this.dataForm.value.rate, this.dataForm.value.type)
       .then(_ => console.log(`${selectedDataTypeName} Data generation started`))
@@ -98,9 +95,8 @@ export class ChartsComponent implements OnInit {
     this.dataCounter = 0;
   }
 
-  private appendRandomColorToColorScheme(color?: string): void {
+  private appendColorsToColorSchemes(color?: string): void {
     const randomColor = color ? color : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-    console.log(randomColor);
     this.colorSchemeLine.domain.push(randomColor);
     this.colorSchemePolar.domain.push(randomColor);
   }
@@ -109,5 +105,23 @@ export class ChartsComponent implements OnInit {
     let currentSerieIndex = this.data.length - 1;
     this.data[currentSerieIndex].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
     this.data = [...this.data];
+  }
+
+  private subscribeToSignalREvents(): void {
+    this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
+      this.dataCounter++;
+      this.pushData(dataPoint);
+    })
+
+    this._signalrService.dataGenerationFinished.subscribe((success: boolean) => {
+      if (success) {
+        this.isReceivingData = false;
+        console.log('Data generation finished')
+        return;
+      }
+
+      console.warn('Failed to generate data')
+      this.clearData();
+    })
   }
 }

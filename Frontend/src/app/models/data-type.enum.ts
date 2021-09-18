@@ -6,4 +6,5 @@ export enum DataType {
     Weibull,
     BirbaumSaunders,
     Dagum,
+    Invalid,
 }

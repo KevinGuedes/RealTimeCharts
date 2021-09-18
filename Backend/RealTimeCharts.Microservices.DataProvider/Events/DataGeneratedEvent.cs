@@ -1,5 +1,5 @@
 ﻿using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Domain.Models;
+using RealTimeCharts.Shared.Models;
 
 namespace RealTimeCharts.Microservices.DataProvider.Events
 {

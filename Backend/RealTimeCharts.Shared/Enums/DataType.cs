@@ -9,5 +9,6 @@
         Weibull,
         BirbaumSaunders,
         Dagum,
+        Invalid,
     }
 }

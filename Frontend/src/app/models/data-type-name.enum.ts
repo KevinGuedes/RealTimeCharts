@@ -6,4 +6,5 @@ export enum DataTypeName {
     Weibull = "Weibull",
     BirbaumSaunders = "Birbaum-Saunders",
     Dagum = "Dagum",
+    Invalid = "Invalid",
 }

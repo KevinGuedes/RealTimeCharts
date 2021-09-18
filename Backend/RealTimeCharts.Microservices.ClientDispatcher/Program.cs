@@ -21,6 +21,8 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddTransient<DataGeneratedEventHandler>();
+                    services.AddTransient<DataGenerationFinishedEventHandler>();
+
                     services.AddRabbitMQBus(hostContext.Configuration);
                     var sp = services.BuildServiceProvider();
                     services.AddSingleton<HubConnection>(sp => SignalRConnectionFactory.CreateHubConnection(hostContext, sp));
