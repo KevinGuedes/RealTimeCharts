@@ -97,7 +97,6 @@ namespace RealTimeCharts.Infra.Bus
             string eventName = typeof(E).Name;
             _logger.LogInformation($"Binding queue to receive {eventName}");
             CheckConnection();
-            var response = _consumerChannel.QueueDeclarePassive("data-providfsdder");
 
             _consumerChannel.QueueBind(
                             queue: _rabbitMqConfig.QueueName,

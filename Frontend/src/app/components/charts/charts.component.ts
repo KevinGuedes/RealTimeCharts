@@ -31,6 +31,8 @@ export class ChartsComponent implements OnInit {
   public dataCounter: number = 0;
   public dataForm!: FormGroup;
   public isReceivingData: boolean = false;
+  public showFailMessage: boolean = false;
+  public dataTypeNameInProcess!: string;
 
   public get formControl() {
     return this.dataForm.controls;
@@ -46,7 +48,6 @@ export class ChartsComponent implements OnInit {
     this.generationRateKeys = Object.keys(this.generationRate).filter(key => !isNaN(Number(key))).map(Number);
     this.subscribeToSignalREvents();
 
-
     this.dataForm = new FormGroup({
       type: new FormControl(null, [
         Validators.required,
@@ -55,6 +56,32 @@ export class ChartsComponent implements OnInit {
         Validators.required,
       ]),
     });
+  }
+
+  private subscribeToSignalREvents(): void {
+    this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
+      this.dataCounter++;
+      this.pushData(dataPoint);
+    })
+
+    this._signalrService.dataGenerationFinished.subscribe((success: boolean) => {
+      this.isReceivingData = false;
+
+      if (success) {
+        console.log(`${this.dataTypeNameInProcess} Data generation finished`)
+        return;
+      }
+
+      this.showFailMessage = true;
+      console.warn(`Failed to generate ${this.dataTypeNameInProcess} data`)
+      this.clearData();
+    })
+  }
+
+  private pushData(dataPoint: DataPoint): void {
+    let currentSerieIndex = this.data.length - 1;
+    this.data[currentSerieIndex].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
+    this.data = [...this.data];
   }
 
   public onSelect(data: any): void {
@@ -75,8 +102,8 @@ export class ChartsComponent implements OnInit {
 
   public async generateData(): Promise<void> {
     this.isReceivingData = true;
-    const selectedDataTypeName = this.dataTypeNameByKey(this.dataForm.value.type);
-    this.data.push({ name: selectedDataTypeName, series: [] })
+    this.dataTypeNameInProcess = this.dataTypeNameByKey(this.dataForm.value.type);
+    this.data.push({ name: this.dataTypeNameInProcess, series: [] })
 
     if (this.dataForm.value.type == 'Heart')
       this.appendColorsToColorSchemes('#eb4646');
@@ -84,7 +111,7 @@ export class ChartsComponent implements OnInit {
       this.appendColorsToColorSchemes();
 
     await this._dataService.generateData(this.dataForm.value.rate, this.dataForm.value.type)
-      .then(_ => console.log(`${selectedDataTypeName} Data generation started`))
+      .then(_ => console.log(`${this.dataTypeNameInProcess} Data generation started`))
       .catch(error => console.error(error.message));
   }
 
@@ -99,29 +126,5 @@ export class ChartsComponent implements OnInit {
     const randomColor = color ? color : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
     this.colorSchemeLine.domain.push(randomColor);
     this.colorSchemePolar.domain.push(randomColor);
-  }
-
-  private pushData(dataPoint: DataPoint): void {
-    let currentSerieIndex = this.data.length - 1;
-    this.data[currentSerieIndex].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
-    this.data = [...this.data];
-  }
-
-  private subscribeToSignalREvents(): void {
-    this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
-      this.dataCounter++;
-      this.pushData(dataPoint);
-    })
-
-    this._signalrService.dataGenerationFinished.subscribe((success: boolean) => {
-      if (success) {
-        this.isReceivingData = false;
-        console.log('Data generation finished')
-        return;
-      }
-
-      console.warn('Failed to generate data')
-      this.clearData();
-    })
   }
 }

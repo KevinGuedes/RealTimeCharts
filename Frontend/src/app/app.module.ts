@@ -19,6 +19,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     MatFormFieldModule,
     MatSelectModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatProgressBarModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

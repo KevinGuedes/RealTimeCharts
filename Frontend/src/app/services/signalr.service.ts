@@ -40,15 +40,15 @@ export class SignalrService {
   }
 
   private onDataReceived(): void {
-    this._hubConnection.on("DataPointDispatched", (data: string) => {
-      const dataPoint = new DataPoint(JSON.parse(data));
+    this._hubConnection.on("DataPointDispatched", (receivedData: string) => {
+      const dataPoint = new DataPoint(JSON.parse(receivedData));
       this.dataReceived.emit(dataPoint);
     })
   }
 
   private onDataGenerationFinished(): void {
-    this._hubConnection.on("DataGenerationFinishedNotificationDispatched", data => {
-      this.dataGenerationFinished.emit(true);
+    this._hubConnection.on("DataGenerationFinishedNotificationDispatched", (success: boolean) => {
+      this.dataGenerationFinished.emit(success);
     })
   }
 

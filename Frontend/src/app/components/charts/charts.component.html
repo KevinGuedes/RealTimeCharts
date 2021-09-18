@@ -32,6 +32,16 @@
       <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
       <button mat-raised-button color="primary" (click)="generateData()" [disabled]="dataForm.invalid || isReceivingData">Generate Data</button>
     </section>
+
+    <section *ngIf="isReceivingData" class="charts__form-container__progress">
+      <h3>Generating {{dataTypeNameInProcess}} data, please wait!</h3>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </section>
+
+    <section *ngIf="showFailMessage" class="charts__form-container__fail-message">
+      <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
+      <button mat-stroked-button color="primary" (click)="showFailMessage = false">Dismiss</button>
+    </section>
   </section>
 
   <section class="charts__divider">
