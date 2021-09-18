@@ -86,13 +86,13 @@ namespace RealTimeCharts.Infra.Bus
             where E : Event
             where H : IEventHandler<E>
         {
-            _subscriptionManager.AddSubscription<E, H>();
-            _consumerChannel = CreateConsumerChannel();
-            BindQueueToEvent<E>();
-            StartBasicConsume();
+            _subscriptionManager.AddSubscription<E, H>(); //adiciona, 1 model cria e 1 model binda queues, 1model cria exchange (canais diferente)
+            _consumerChannel = CreateConsumerChannel(); //Verifica passo anterior (se tem fila e exchange) e 1model para consumir
+            BindQueueToExchangeForEvent<E>();
+            StartBasicConsume(_consumerChannel); //com o model de consumo 
         }
 
-        private void BindQueueToEvent<E>() where E : Event
+        private void BindQueueToExchangeForEvent<E>() where E : Event
         {
             string eventName = typeof(E).Name;
             _logger.LogInformation($"Binding queue to receive {eventName}");
@@ -121,6 +121,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation($"Creating consumer channel");
             CheckConnection();
             var channel = _busPersistentConnection.CreateChannel();
+            channel.BasicQos(0, 1, false);
             CreateExchange(channel);
             channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
                                  durable: true,
@@ -133,7 +134,7 @@ namespace RealTimeCharts.Infra.Bus
                 _logger.LogWarning(ea.Exception, "Recreating consumer channel");
                 _consumerChannel.Dispose();
                 _consumerChannel = CreateConsumerChannel();
-                StartBasicConsume();
+                StartBasicConsume(channel);
             };
 
             _logger.LogInformation($"Consumer channel created");
@@ -146,14 +147,14 @@ namespace RealTimeCharts.Infra.Bus
                 _busPersistentConnection.StartPersistentConnection();
         }
 
-        private void StartBasicConsume()
+        private void StartBasicConsume(IModel consumerChannel)
         {
-            if (_consumerChannel != null)
+            if (consumerChannel != null)
             {
                 _logger.LogInformation("Starting basic consume");
-                var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
-                consumer.Received += Consumer_Received;
-                _consumerChannel.BasicConsume(
+                var consumer = new AsyncEventingBasicConsumer(consumerChannel);
+                consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
+                consumerChannel.BasicConsume(
                     queue: _rabbitMqConfig.QueueName,
                     autoAck: false,
                     consumer: consumer);
@@ -163,7 +164,7 @@ namespace RealTimeCharts.Infra.Bus
                 _logger.LogError("Consumer channel not created");
         }
 
-        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
+        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs, IModel consumerChannel)
         {
             var eventName = eventArgs.RoutingKey;
             var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
@@ -177,7 +178,7 @@ namespace RealTimeCharts.Infra.Bus
                 _logger.LogError($"Failed process event {eventName}: {ex.Message}");
             }
 
-            _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+            consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
 
         private async Task ProcessEvent(string eventName, string message)
