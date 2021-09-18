@@ -41,8 +41,19 @@ export class ChartsComponent implements OnInit {
     private readonly _signalrService: SignalrService,
     private readonly _dataService: DataService,
   ) {
-    this.dataTypeNameEntries = Object.entries(DataTypeName);
+
+    this.dataTypeNameEntries = Object.keys(DataTypeName);
     this.generationRateKeys = Object.keys(this.generationRate).filter(key => !isNaN(Number(key))).map(Number);
+
+    // console.log(this.dataTypeNameEntries)
+    // Object.entries(DataTypeName).map(([key, value]) => {
+    //   console.log(key as keyof typeof DataTypeName)
+    //   // console.log(DataTypeName[key as keyof typeof DataTypeName])
+    // })
+    // // for (let key in DataTypeName) {
+    // //   console.log(key);
+    // //   console.log(DataTypeName[key as keyof typeof DataTypeName])
+    // // }
 
     this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
       this.dataCounter++;
@@ -74,14 +85,16 @@ export class ChartsComponent implements OnInit {
     console.log('Deactivate', data);
   }
 
+  public dataTypeNameByKey(key: string): string {
+    return DataTypeName[key as keyof typeof DataTypeName]
+  }
+
   public async generateData(): Promise<void> {
-    const selectedDataTypeName = DataTypeName[this.dataForm.value.type as keyof typeof DataTypeName]
+    const selectedDataTypeName = this.dataTypeNameByKey(this.dataForm.value.type);
     this.data.push({ name: selectedDataTypeName, series: [] })
 
     await this._dataService.generateData(this.dataForm.value.rate, this.dataForm.value.type)
-      .then(() => {
-        console.log(`${selectedDataTypeName} Data generation started`)
-      })
+      .then(_ => console.log(`${selectedDataTypeName} Data generation started`))
       .catch(error => console.error(error.message));
   }
 

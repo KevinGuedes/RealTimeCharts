@@ -4,4 +4,5 @@ export enum DataTypeName {
     Logarithmic = "Logarithmic",
     Fibonacci = "Fibonacci",
     Weibull = "Weibull",
+    BS = "Birbaun Saunders",
 }

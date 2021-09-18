@@ -4,4 +4,5 @@ export enum DataType {
     Logarithmic,
     Fibonacci,
     Weibull,
+    BS,
 }
