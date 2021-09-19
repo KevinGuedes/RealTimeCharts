@@ -69,7 +69,13 @@
 
     <section *ngIf="showFailMessage" class="charts__form-container__fail-message">
       <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
-      <button mat-stroked-button color="primary" (click)="showFailMessage = false">Dismiss</button>
+      <button class="charts__form-container__fail-message__dismiss" mat-stroked-button color="primary" (click)="showFailMessage = false">
+        <span class="charts__form-container__fail-message__dismiss__tool-tip"
+          #tooltip="matTooltip" matTooltip="Dismiss message" matTooltipPosition="right">
+          Dismiss
+          <mat-icon class="charts__form-container__fail-message__dismiss__tool-tip__icon">error</mat-icon>
+        </span>
+      </button>
     </section>
   </section>
 
