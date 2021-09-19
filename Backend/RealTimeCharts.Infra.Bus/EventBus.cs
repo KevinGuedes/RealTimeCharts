@@ -27,8 +27,6 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly int _maxRetryAttempts;
-        private IModel _consumerChannel;
-        private bool _exchangeCreated;
 
         public EventBus(
             ILogger<EventBus> logger,
@@ -46,17 +44,16 @@ namespace RealTimeCharts.Infra.Bus
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
             _maxRetryAttempts = maxRetryAttempts;
-            _exchangeCreated = false;
         }
 
         public void Publish(Event @event)
         {
             _logger.LogInformation($"Creating channel to publish event");
-            CheckConnection();
+            _busPersistentConnection.CheckConnection();
             using var channel = _busPersistentConnection.CreateChannel();
             _logger.LogInformation($"Channel created");
 
-            CreateExchange(channel);
+            _queueExchangeManager.EnsureExchangeExists();
 
             string eventName = @event.GetType().Name;
             _logger.LogInformation($"Serializing {eventName}");
@@ -89,82 +86,40 @@ namespace RealTimeCharts.Infra.Bus
             where E : Event
             where H : IEventHandler<E>
         {
-            _subscriptionManager.AddSubscription<E, H>(); //adiciona, 1 model cria e 1 model binda queues, 1model cria exchange (canais diferente)
-            _consumerChannel = CreateConsumerChannel(); //Verifica passo anterior (se tem fila e exchange) e 1model para consumir
-            BindQueueToExchangeForEvent<E>();
-            StartBasicConsume(_consumerChannel); //com o model de consumo 
+            _subscriptionManager.AddSubscription<E, H>(); 
+            _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
+            //adiciona, 1 model cria e 1 model binda queues, 1model cria exchange (canais diferente)
+            //Verifica passo anterior (se tem fila e exchange) e 1model para consumir
+            //com o model de consumo starta o consumo
         }
 
-        private void BindQueueToExchangeForEvent<E>() where E : Event
+        public void StartConsuming()
         {
-            string eventName = typeof(E).Name;
-            _logger.LogInformation($"Binding queue to receive {eventName}");
-            CheckConnection();
+            _logger.LogInformation($"Starting event consumption");
+            _busPersistentConnection.CheckConnection();
+            _queueExchangeManager.EnsureExchangeExists();
+            _queueExchangeManager.EnsureQueueExists(); //d~uvida no que faz quando ensure queue, se binda de novo e como
 
-            _consumerChannel.QueueBind(
-                            queue: _rabbitMqConfig.QueueName,
-                            exchange: _rabbitMqConfig.ExchangeName,
-                            routingKey: eventName);
-            _logger.LogInformation("Queue bound to exchange");
-        }
-
-        private void CreateExchange(IModel channel)
-        {
-            if (!_exchangeCreated)
-            {
-                _logger.LogInformation("Creating exchange to publish events");
-                channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
-                _exchangeCreated = true;
-                _logger.LogInformation("Exchange created");
-            }
-        }
-
-        private IModel CreateConsumerChannel()
-        {
             _logger.LogInformation($"Creating consumer channel");
-            CheckConnection();
             var channel = _busPersistentConnection.CreateChannel();
             channel.BasicQos(0, 1, false);
-            CreateExchange(channel);
-            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
-                                 durable: true,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
 
             channel.CallbackException += (sender, ea) =>
             {
-                _logger.LogWarning(ea.Exception, "Recreating consumer channel");
-                _consumerChannel.Dispose(); //para o chanel que foi criado ou seja channel ao i'nvés de _consumerChannel
-                _consumerChannel = CreateConsumerChannel();
-                StartBasicConsume(channel);
+                _logger.LogWarning(ea.Exception, "Channel failed, starting new event consumption");
+                channel.Dispose(); //dúvida aqui
+                StartConsuming();
             };
-
             _logger.LogInformation($"Consumer channel created");
-            return channel;
-        }
 
-        private void CheckConnection()
-        {
-            if (!_busPersistentConnection.IsConnected)
-                _busPersistentConnection.StartPersistentConnection();
-        }
-
-        private void StartBasicConsume(IModel consumerChannel)
-        {
-            if (consumerChannel != null)
-            {
-                _logger.LogInformation("Starting basic consume");
-                var consumer = new AsyncEventingBasicConsumer(consumerChannel);
-                consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
-                consumerChannel.BasicConsume(
-                    queue: _rabbitMqConfig.QueueName,
-                    autoAck: false,
-                    consumer: consumer);
-                _logger.LogInformation("Basic consume started");
-            }
-            else
-                _logger.LogError("Consumer channel not created");
+            _logger.LogInformation("Starting basic consume");
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, channel);
+            channel.BasicConsume(
+                queue: _rabbitMqConfig.QueueName,
+                autoAck: false,
+                consumer: consumer);
+            _logger.LogInformation("Basic consume started");
         }
 
         private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs, IModel consumerChannel)

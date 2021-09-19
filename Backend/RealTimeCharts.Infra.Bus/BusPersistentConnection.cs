@@ -64,6 +64,12 @@ namespace RealTimeCharts.Infra.Bus
             return _connection.CreateModel();
         }
 
+        public void CheckConnection()
+        {
+            if (!IsConnected)
+                StartPersistentConnection();
+        }
+
         public bool StartPersistentConnection()
         {
             _logger.LogInformation("Starting persistent connection");

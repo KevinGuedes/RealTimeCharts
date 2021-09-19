@@ -14,8 +14,9 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<QueueExchangeManager> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
         private readonly IBusPersistentConnection _busPersistentConnection;
-        private bool _exchangeCreated;
-        private bool _queueCreated;
+        private bool _isExchangeCreated;
+        private bool _isQueueCreated;
+        private bool _IsQueueBoundToExchange;
 
         public QueueExchangeManager(
             ILogger<QueueExchangeManager> logger,
@@ -25,13 +26,16 @@ namespace RealTimeCharts.Infra.Bus
             _logger = logger;
             _busPersistentConnection = busPersistentConnection;
             _rabbitMqConfig = rabbitMqConfig.Value;
+            _isExchangeCreated = false;
+            _isQueueCreated = false;
+            _IsQueueBoundToExchange = false;
         }
 
         public void EnsureExchangeExists()
         {
-            if (!_exchangeCreated)
+            if (!_isExchangeCreated)
             {
-                CheckConnection();
+                _busPersistentConnection.CheckConnection();
                 var channel = _busPersistentConnection.CreateChannel();
                 CreateExchange(channel);
             }
@@ -39,9 +43,9 @@ namespace RealTimeCharts.Infra.Bus
 
         public void EnsureQueueExists()
         {
-            if (!_queueCreated)
+            if (!_isQueueCreated)
             {
-                CheckConnection();
+                _busPersistentConnection.CheckConnection();
                 var channel = _busPersistentConnection.CreateChannel();
                 CreateQueue(channel);
             }
@@ -51,11 +55,12 @@ namespace RealTimeCharts.Infra.Bus
         {
             string eventName = typeof(E).Name;
             _logger.LogInformation($"Configuring subscription for {eventName}");
-            CheckConnection();
+            _busPersistentConnection.CheckConnection();
             var channel = _busPersistentConnection.CreateChannel();
             CreateExchange(channel);
             CreateQueue(channel);
             BindQueueToExchangeForEvent(eventName, channel);
+            //channel.Close(); //devo disposar quando n'ao mais usar? Documenta~c'ao diz que sim
 
             _logger.LogInformation($"Subscription for {eventName} configured");
         }
@@ -64,7 +69,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             _logger.LogInformation("Creating exchange to publish events");
             channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
-            _exchangeCreated = true;
+            _isExchangeCreated = true;
 
             _logger.LogInformation("Exchange created");
         }
@@ -77,7 +82,7 @@ namespace RealTimeCharts.Infra.Bus
                                 exclusive: false,
                                 autoDelete: false,
                                 arguments: null);
-            _queueCreated = true;
+            _isQueueCreated = true;
 
             _logger.LogInformation("Queue created");
         }
@@ -88,14 +93,9 @@ namespace RealTimeCharts.Infra.Bus
             channel.QueueBind(queue: _rabbitMqConfig.QueueName,
                               exchange: _rabbitMqConfig.ExchangeName,
                               routingKey: eventName);
+            _IsQueueBoundToExchange = true;
 
             _logger.LogInformation("Queue bound to exchange");
-        }
-
-        private void CheckConnection()
-        {
-            if (!_busPersistentConnection.IsConnected)
-                _busPersistentConnection.StartPersistentConnection();
         }
     }
 }

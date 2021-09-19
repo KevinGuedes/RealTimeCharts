@@ -7,6 +7,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
     {
         bool IsConnected { get; }
         bool StartPersistentConnection();
+        void CheckConnection();
         IModel CreateChannel();
     }
 }

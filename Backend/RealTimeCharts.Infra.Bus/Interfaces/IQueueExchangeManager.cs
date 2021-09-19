@@ -1,4 +1,5 @@
-﻿using RealTimeCharts.Shared.Events;
+﻿using RabbitMQ.Client;
+using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
@@ -6,6 +7,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
     {
         void EnsureExchangeExists();
         void EnsureQueueExists();
+        //void CreateExchange(IModel channel);
         void ConfigureSubscriptionForEvent<E>() where E : Event;
     }
 }
