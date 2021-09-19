@@ -20,6 +20,7 @@ namespace RealTimeCharts.Infra.IoC
         {
             services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
             services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
+            services.AddSingleton<IQueueExchangeManager, QueueExchangeManager>();
             services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
             services.AddSingleton<IBusPersistentConnection, BusPersistentConnection>(sp =>
             {

@@ -23,6 +23,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<EventBus> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
         private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly IQueueExchangeManager _queueExchangeManager;
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly int _maxRetryAttempts;
@@ -33,6 +34,7 @@ namespace RealTimeCharts.Infra.Bus
             ILogger<EventBus> logger,
             IOptions<RabbitMQConfigurations> rabbitMqConfig,
             IBusPersistentConnection busPersistentConnection,
+            IQueueExchangeManager queueExchangeManager,
             ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory,
             int maxRetryAttempts = 5)
@@ -40,6 +42,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger = logger;
             _subscriptionManager = subscriptionManager;
             _busPersistentConnection = busPersistentConnection;
+            _queueExchangeManager = queueExchangeManager;
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
             _maxRetryAttempts = maxRetryAttempts;

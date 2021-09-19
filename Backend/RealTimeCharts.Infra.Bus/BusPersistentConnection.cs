@@ -1,20 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Exceptions;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RealTimeCharts.Infra.Bus
 {
@@ -23,9 +17,9 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<BusPersistentConnection> _logger;
         private readonly IConnectionFactory _connectionFactory;
         private readonly int _maxRetryAttempts;
-        IConnection _connection;
-        bool _disposed;
-        object sync_root = new();
+        private readonly object sync_root = new();
+        private IConnection _connection;
+        private bool _disposed;
 
         public BusPersistentConnection(
             ILogger<BusPersistentConnection> logger,
