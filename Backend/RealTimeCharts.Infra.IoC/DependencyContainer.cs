@@ -20,25 +20,24 @@ namespace RealTimeCharts.Infra.IoC
         {
             services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
             services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
-
+            services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
             services.AddSingleton<IBusPersistentConnection, BusPersistentConnection>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<BusPersistentConnection>>();
-                var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
+                var rabbitMqConfig = sp.GetService<IOptions<RabbitMQConfigurations>>();
+                var connectionFactory = new ConnectionFactory()
+                {
+                    HostName = rabbitMqConfig.Value.HostName,
+                    UserName = rabbitMqConfig.Value.UserName,
+                    Password = rabbitMqConfig.Value.Password,
+                    Port = rabbitMqConfig.Value.Port,
+                    DispatchConsumersAsync = true
+                };
 
-                return new(logger, RabbitMqConnectionFactory.CreateRabbitMqConnectionFactory(options));
+                return new(logger, connectionFactory);
             });
 
-            services.AddSingleton<IEventBus, EventBus>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<EventBus>>();
-                var busPersistentConnection = sp.GetRequiredService<IBusPersistentConnection>();
-                var subcriptionsManager = sp.GetRequiredService<ISubscriptionManager>();
-                var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-                var options = sp.GetService<IOptions<RabbitMQConfigurations>>();
-
-                return new(logger, options, busPersistentConnection, subcriptionsManager, scopeFactory);
-            });
+            services.AddSingleton<IEventBus, EventBus>();
         }
 
         public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
