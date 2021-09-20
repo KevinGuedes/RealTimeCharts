@@ -11,26 +11,38 @@ export class SignalrService {
   private readonly _hubUrl: string = environment.dataHubUrl;
   private readonly _hubConnection: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl(this._hubUrl)
-    .withAutomaticReconnect([0, 2, 5, 10, 15, 25, 35])
+    .withAutomaticReconnect([1000, 10000, 30000, 60000, 120000, 180000])
     .build();
   private _isConnected: boolean = false;
   private _connectionId!: string;
   public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
   public dataGenerationFinished: EventEmitter<boolean> = new EventEmitter<boolean>();
+  public connectionStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor() {
     this.startConnection();
     this.subscribeToEvents();
-    this._hubConnection.onclose(async () => {
+    this.configureConnection();
+  }
+
+  private configureConnection() {
+    this._hubConnection.onreconnecting(_ => {
+      console.error('Connection with SignalR was lost, trying to reconnect')
       this._isConnected = false;
-      await this.startConnection();
+      this.connectionStatus.emit(false);
+    })
+
+    this._hubConnection.onreconnected(_ => {
+      this.connectionStatus.emit(true);
+      console.log('Connection with SignalR Hub established')
     })
   }
 
   private async startConnection(): Promise<void> {
     await this._hubConnection.start().then(() => {
       this._isConnected = true;
-      this._connectionId = this._hubConnection.connectionId as string;
+      if (this._hubConnection.connectionId)
+        this._connectionId = this._hubConnection.connectionId;
     });
   }
 

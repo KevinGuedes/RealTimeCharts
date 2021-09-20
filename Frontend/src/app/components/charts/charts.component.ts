@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import * as DShape from 'd3-shape';
 import { DataGenerationRate } from 'src/app/models/data-generation-rate.enum';
 import { DataPoint } from 'src/app/models/data-point.model';
 import { DataTypeName } from 'src/app/models/data-type-name.enum';
-import { DataType } from 'src/app/models/data-type.enum';
 import { DataService } from 'src/app/services/data.service';
 import { SignalrService } from 'src/app/services/signalr.service';
+import * as DShape from 'd3-shape';
 
 @Component({
   selector: 'app-charts',
@@ -32,6 +31,7 @@ export class ChartsComponent implements OnInit {
   public dataForm!: FormGroup;
   public isReceivingData: boolean = false;
   public showFailMessage: boolean = false;
+  public connectedWithSignalR!: boolean;
   public dataTypeNameInProcess!: string;
 
   public get formControl() {
@@ -59,6 +59,17 @@ export class ChartsComponent implements OnInit {
   }
 
   private subscribeToSignalREvents(): void {
+    this._signalrService.connectionStatus.subscribe((status: boolean) => {
+      if (status) {
+        this.connectedWithSignalR = true;
+        return;
+      }
+
+      this.connectedWithSignalR = false;
+      this.isReceivingData = false
+      this.showFailMessage = true;
+    })
+
     this._signalrService.dataReceived.subscribe((dataPoint: DataPoint) => {
       this.dataCounter++;
       this.pushData(dataPoint);

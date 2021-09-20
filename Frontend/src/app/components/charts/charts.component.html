@@ -68,8 +68,13 @@
     </section>
 
     <section *ngIf="showFailMessage" class="charts__form-container__fail-message">
-      <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
-      <button class="charts__form-container__fail-message__dismiss" mat-stroked-button color="primary" (click)="showFailMessage = false">
+
+      <h3 *ngIf="!connectedWithSignalR; else failedToGenerateData">Connection with SignalR was lost, try again later!</h3>
+      <ng-template #failedToGenerateData>
+            <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
+      </ng-template>
+
+      <button class="charts__form-container__fail-message__dismiss" mat-raised-button color="warn" (click)="showFailMessage = false">
         <span class="charts__form-container__fail-message__dismiss__tool-tip"
           #tooltip="matTooltip" matTooltip="Dismiss message" matTooltipPosition="right">
           Dismiss
