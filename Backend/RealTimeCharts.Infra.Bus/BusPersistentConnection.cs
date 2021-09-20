@@ -44,11 +44,10 @@ namespace RealTimeCharts.Infra.Bus
             if (_disposed)
                 return;
 
-            _disposed = true;
-
             try
             {
                 _connection.Dispose();
+                _disposed = true;
             }
             catch (IOException ex)
             {
@@ -70,13 +69,14 @@ namespace RealTimeCharts.Infra.Bus
                 StartPersistentConnection();
         }
 
-        public bool StartPersistentConnection()
+        public void StartPersistentConnection()
         {
             _logger.LogInformation("Starting persistent connection");
 
             lock (sync_root)
             {
-                var connectionPolicy = RetryPolicy.Handle<BrokerUnreachableException>()
+                var connectionPolicy = RetryPolicy
+                    .Handle<BrokerUnreachableException>()
                     .Or<SocketException>()
                     .WaitAndRetry(_maxRetryAttempts, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
@@ -94,34 +94,36 @@ namespace RealTimeCharts.Infra.Bus
                     _connection.CallbackException += OnCallbackException;
                     _connection.ConnectionBlocked += OnConnectionBlocked;
                     _logger.LogInformation("Event Bus acquired persistent connection with AMQP service in and is subscribed to failure events", _connection.Endpoint.HostName);
-                    return true;
                 }
                 else
-                {
                     _logger.LogCritical("Connection to AMQP service could not be stablished");
-                    return false;
-                }
             }
         }
 
         private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to blocked connection. Trying to reconnect");
-            StartPersistentConnection();
+            _logger.LogCritical($"Connection to AMQP service lost due to blocked connection: {e.Reason}");
+            RestoreConnection();
         }
 
         private void OnCallbackException(object sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to exception. Trying to reconnect");
-            StartPersistentConnection();
+            _logger.LogCritical($"Connection to AMQP service lost due to exception: {e.Exception.Message}");
+            RestoreConnection();
         }
 
         private void OnConnectionShutdown(object sender, ShutdownEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to shutdown. Trying to reconnect");
+            _logger.LogCritical($"Connection to AMQP service lost due to shutdown: {e.ReplyText}");
+            RestoreConnection();
+        }
+
+        private void RestoreConnection()
+        {
+            _logger.LogCritical("Trying to restore connection");
             StartPersistentConnection();
         }
     }

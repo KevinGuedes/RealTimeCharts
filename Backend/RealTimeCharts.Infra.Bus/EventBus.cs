@@ -27,6 +27,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly int _maxRetryAttempts;
+        private IModel _publishingChannel;
 
         public EventBus(
             ILogger<EventBus> logger,
@@ -46,14 +47,27 @@ namespace RealTimeCharts.Infra.Bus
             _maxRetryAttempts = maxRetryAttempts;
         }
 
+        private void CreatePublishingChannel()
+        {
+            _logger.LogInformation("Creating publishing channel");
+            _publishingChannel = _busPersistentConnection.CreateChannel();
+            _publishingChannel.CallbackException += (sender, ea) =>
+            {
+                _logger.LogWarning(ea.Exception, "Publishing channel failed, trying to restore it");
+                _publishingChannel.Dispose(); //dúvida aqui
+                CreatePublishingChannel();
+            };
+            _logger.LogInformation("Publishing channel created");
+        }
+
         public void Publish(Event @event)
         {
             _logger.LogInformation($"Creating channel to publish event");
             _busPersistentConnection.CheckConnection();
-            using var channel = _busPersistentConnection.CreateChannel();
-            _logger.LogInformation($"Channel created");
-
             _queueExchangeManager.EnsureExchangeExists();
+
+            if (_publishingChannel == null || !_publishingChannel.IsOpen)
+                CreatePublishingChannel();
 
             string eventName = @event.GetType().Name;
             _logger.LogInformation($"Serializing {eventName}");
@@ -71,9 +85,9 @@ namespace RealTimeCharts.Infra.Bus
 
             publishPolicy.Execute(() =>
             {
-                var properties = channel.CreateBasicProperties();
+                var properties = _publishingChannel.CreateBasicProperties();
                 properties.DeliveryMode = 2;
-                channel.BasicPublish(
+                _publishingChannel.BasicPublish(
                     exchange: _rabbitMqConfig.ExchangeName,
                     routingKey: eventName,
                     basicProperties: properties,
@@ -88,9 +102,6 @@ namespace RealTimeCharts.Infra.Bus
         {
             _subscriptionManager.AddSubscription<E, H>(); 
             _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
-            //adiciona, 1 model cria e 1 model binda queues, 1model cria exchange (canais diferente)
-            //Verifica passo anterior (se tem fila e exchange) e 1model para consumir
-            //com o model de consumo starta o consumo
         }
 
         public void StartConsuming()
@@ -101,21 +112,20 @@ namespace RealTimeCharts.Infra.Bus
             _queueExchangeManager.EnsureQueueExists(); //d~uvida no que faz quando ensure queue, se binda de novo e como
 
             _logger.LogInformation($"Creating consumer channel");
-            var channel = _busPersistentConnection.CreateChannel();
-            channel.BasicQos(0, 1, false);
-
-            channel.CallbackException += (sender, ea) =>
+            var consumerChannel = _busPersistentConnection.CreateChannel();
+            consumerChannel.BasicQos(0, 1, false);
+            consumerChannel.CallbackException += (sender, ea) =>
             {
-                _logger.LogWarning(ea.Exception, "Channel failed, starting new event consumption");
-                channel.Dispose(); //dúvida aqui
+                _logger.LogWarning(ea.Exception, "Consumer channel failed, trying to restore it");
+                consumerChannel.Dispose(); //dúvida aqui
                 StartConsuming();
             };
             _logger.LogInformation($"Consumer channel created");
 
             _logger.LogInformation("Starting basic consume");
-            var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, channel);
-            channel.BasicConsume(
+            var consumer = new AsyncEventingBasicConsumer(consumerChannel);
+            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
+            consumerChannel.BasicConsume(
                 queue: _rabbitMqConfig.QueueName,
                 autoAck: false,
                 consumer: consumer);

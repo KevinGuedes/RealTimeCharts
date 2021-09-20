@@ -6,7 +6,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
     public interface IBusPersistentConnection : IDisposable
     {
         bool IsConnected { get; }
-        bool StartPersistentConnection();
+        void StartPersistentConnection();
         void CheckConnection();
         IModel CreateChannel();
     }
