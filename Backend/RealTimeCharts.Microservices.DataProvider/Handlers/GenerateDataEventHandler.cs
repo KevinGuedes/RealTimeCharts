@@ -51,7 +51,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
             }
             catch(Exception ex)
             {
-                _logger.LogError($"{ex.Message}");
+                _logger.LogError($"Failed to generate Data: {ex.Message}");
                 _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, false));
                 return Result.Error(ex);
             }

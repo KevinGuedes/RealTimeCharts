@@ -54,7 +54,8 @@ namespace RealTimeCharts.Infra.Bus
             _publishingChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Publishing channel failed, trying to restore it");
-                _publishingChannel.Dispose(); //dúvida aqui
+                _publishingChannel.Close();
+                _busPersistentConnection.CheckConnection();
                 CreatePublishingChannel();
             };
             _logger.LogInformation("Publishing channel created");
@@ -109,7 +110,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation($"Starting event consumption");
             _busPersistentConnection.CheckConnection();
             _queueExchangeManager.EnsureExchangeExists();
-            _queueExchangeManager.EnsureQueueExists(); //d~uvida no que faz quando ensure queue, se binda de novo e como
+            _queueExchangeManager.EnsureQueueExists();
 
             _logger.LogInformation($"Creating consumer channel");
             var consumerChannel = _busPersistentConnection.CreateChannel();
@@ -117,7 +118,7 @@ namespace RealTimeCharts.Infra.Bus
             consumerChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogWarning(ea.Exception, "Consumer channel failed, trying to restore it");
-                consumerChannel.Dispose(); //dúvida aqui
+                consumerChannel.Close();
                 StartConsuming();
             };
             _logger.LogInformation($"Consumer channel created");
@@ -139,20 +140,21 @@ namespace RealTimeCharts.Infra.Bus
 
             try
             {
+                _logger.LogTrace($"Processing {eventName}");
                 await ProcessEvent(eventName, message);
+                consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+                _logger.LogTrace($"{eventName} processed and acknowledged");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed process event {eventName}: {ex.Message}");
+                _logger.LogError($"Failed to process event {eventName}: {ex.Message}");
+                consumerChannel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
+                _logger.LogWarning($"{eventName} negative acknowledged");
             }
-
-            consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
 
         private async Task ProcessEvent(string eventName, string message)
         {
-            _logger.LogTrace($"Processing {eventName}");
-
             if (_subscriptionManager.HasSubscriptionsForEvent(eventName))
             {
                 using var scope = _serviceScopeFactory.CreateScope();
@@ -164,11 +166,16 @@ namespace RealTimeCharts.Infra.Bus
                     if (handler == null) continue;
 
                     var eventType = _subscriptionManager.GetEventTypeByName(eventName);
+
+                    _logger.LogInformation($"Deserializing {eventName}");
                     var @event = JsonConvert.DeserializeObject(message, eventType);
+
                     var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
                     await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
                 }
             }
+            else
+                _logger.LogWarning($"No subscription found for {eventName}");
         }
     }
 }

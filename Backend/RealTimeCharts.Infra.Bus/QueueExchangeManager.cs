@@ -83,6 +83,19 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Queue created");
         }
 
+        private void CreateDeadLetterQueue(IModel channel)
+        {
+            _logger.LogInformation("Creating dead letter queue");
+            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
+                                durable: true,
+                                exclusive: false,
+                                autoDelete: false,
+                                arguments: null);
+            _isQueueCreated = true;
+
+            _logger.LogInformation("Dead letter queue created");
+        }
+
         private void BindQueueToExchangeForEvent(string eventName, IModel channel)
         {
             _logger.LogInformation($"Binding queue to receive {eventName}");
