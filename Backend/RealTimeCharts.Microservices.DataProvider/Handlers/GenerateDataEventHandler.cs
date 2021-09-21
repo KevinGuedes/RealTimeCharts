@@ -2,6 +2,7 @@
 using OperationResult;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Microservices.DataProvider.Events;
+using RealTimeCharts.Microservices.DataProvider.Exceptions;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Shared.Handlers;
 using System;
@@ -28,27 +29,30 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
         {
             try
             {
-                _logger.LogInformation("Generating data points");
+                _logger.LogInformation($"Generating {@event.DataType} data points");
+                var optimalSetup = _dataGenerator.GetOptimalSetupFor(@event.DataType);
 
-                for (int i = 0; i <= @event.Max; i += @event.Step)
+                for (double i = optimalSetup.Min; i <= optimalSetup.Max; i += optimalSetup.Step)
                 {
-                    var dataPoint = _dataGenerator.GenerateData(Convert.ToDouble(i), @event.DataType);
+                    var dataPoint = _dataGenerator.GenerateData(i, @event.DataType);
+                    if (!dataPoint.IsValid)
+                        throw new InvalidDataGeneratedException("Invalid data generated");
 
-                    using (_logger.BeginScope(new Dictionary<string, string>() { ["DataPoint"] = dataPoint.ToString() }))
-                    {
-                        _logger.LogInformation($"Publishing data generated event to dispatcher");
-                        _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));
-                    }
+                    _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
+                    _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));
 
                     Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));
                 }
 
-                _logger.LogInformation("Data successfully generated");
+                _logger.LogInformation($"{@event.DataType} Data successfully generated");
+                _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, true));
+
                 return Result.Success();
             }
             catch(Exception ex)
             {
                 _logger.LogError($"{ex.Message}");
+                _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, false));
                 return Result.Error(ex);
             }
         }

@@ -6,8 +6,8 @@
       <mat-form-field>
         <mat-label>Data Type</mat-label>
         <mat-select formControlName="type">
-          <mat-option *ngFor="let key of dataTypeKeys" [value]="key" required>
-            {{dataTypes[key]}}
+          <mat-option *ngFor="let key of dataTypeNameKeys" [value]="key" required>
+            {{dataTypeNameByKey(key)}}
           </mat-option>
         </mat-select>
         <mat-error *ngIf="formControl.type.touched && formControl.type.invalid">
@@ -29,8 +29,58 @@
     </form>
 
     <section class="charts__form-container__actions">
-      <button mat-stroked-button color="primary" (click)="clearData()">Cleart Data</button>
-      <button mat-raised-button color="primary" (click)="generateData()" [disabled]="dataForm.invalid">Generate Data</button>
+      <button class="charts__form-container__actions__button" 
+        mat-stroked-button 
+        color="primary" 
+        (click)="clearData()">
+        <span class="charts__form-container__actions__button__tool-tip"
+          #tooltip="matTooltip" matTooltip="Clear charts data" matTooltipPosition="left">
+          Cleart Data
+          <mat-icon class="charts__form-container__actions__button__tool-tip__icon">clear</mat-icon>
+        </span>
+      </button>
+      
+      <button class="charts__form-container__actions__button"
+        [disabled]="dataForm.invalid || isReceivingData" 
+        (click)="generateData()"   
+        mat-raised-button color="primary">
+
+          <span *ngIf="isReceivingData; else commonToolTip" class="charts__form-container__actions__button__tool-tip" #tooltip="matTooltip" matTooltip="Wait until current process is finished"
+            matTooltipPosition="right" [matTooltipDisabled]="!(dataForm.invalid || isReceivingData)">
+            Wait
+            <mat-icon class="charts__form-container__actions__button__tool-tip__icon">hourglass_bottom</mat-icon>
+          </span>
+
+          <ng-template #commonToolTip>
+            <span class="charts__form-container__actions__button__tool-tip" #tooltip="matTooltip" matTooltip="Invalid setup"
+              matTooltipPosition="right" [matTooltipDisabled]="!(dataForm.invalid || isReceivingData)">
+              Generate Data
+              <mat-icon class="charts__form-container__actions__button__tool-tip__icon">timeline</mat-icon>
+            </span>
+          </ng-template>
+        </button>
+            
+    </section>
+
+    <section *ngIf="isReceivingData" class="charts__form-container__progress">
+      <h3>Generating {{dataTypeNameInProcess}} data, please wait!</h3>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </section>
+
+    <section *ngIf="showFailMessage" class="charts__form-container__fail-message">
+
+      <h3 *ngIf="!connectedWithSignalR; else failedToGenerateData">Connection with SignalR was lost, try again later!</h3>
+      <ng-template #failedToGenerateData>
+            <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
+      </ng-template>
+
+      <button class="charts__form-container__fail-message__dismiss" mat-raised-button color="warn" (click)="showFailMessage = false">
+        <span class="charts__form-container__fail-message__dismiss__tool-tip"
+          #tooltip="matTooltip" matTooltip="Dismiss message" matTooltipPosition="right">
+          Dismiss
+          <mat-icon class="charts__form-container__fail-message__dismiss__tool-tip__icon">error</mat-icon>
+        </span>
+      </button>
     </section>
   </section>
 

@@ -4,6 +4,7 @@ namespace RealTimeCharts.Presentation.SignalR.Interfaces
 {
     public interface IDataHub
     {
-        Task SendData(string data, string connectionId);
+        Task DataPointDispatched(string data, string connectionId);
+        Task DataGenerationFinishedNotificationDispatched(bool success, string connectionId);
     }
 }

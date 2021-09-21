@@ -3,5 +3,12 @@
     public enum DataType: int
     {
         Heart,
+        Polynomial,
+        Logarithmic,
+        Fibonacci,
+        Weibull,
+        BirbaumSaunders,
+        Dagum,
+        Invalid,
     }
 }

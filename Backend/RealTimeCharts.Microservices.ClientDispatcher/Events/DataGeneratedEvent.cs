@@ -1,5 +1,5 @@
 ﻿using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Domain.Models;
+using RealTimeCharts.Shared.Models;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Events
 {
@@ -11,7 +11,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Events
             ConnectionId = connectionId;
         }
 
-        public DataPoint DataPoint;
-        public string ConnectionId;
+        public DataPoint DataPoint { get; set; }
+        public string ConnectionId { get; set; }
     }
 }

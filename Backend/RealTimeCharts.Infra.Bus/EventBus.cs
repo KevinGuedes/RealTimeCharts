@@ -23,16 +23,17 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<EventBus> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
         private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly IQueueExchangeManager _queueExchangeManager;
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly int _maxRetryAttempts;
-        private IModel _consumerChannel;
-        private bool _exchangeCreated;
+        private IModel _publishingChannel;
 
         public EventBus(
             ILogger<EventBus> logger,
             IOptions<RabbitMQConfigurations> rabbitMqConfig,
             IBusPersistentConnection busPersistentConnection,
+            IQueueExchangeManager queueExchangeManager,
             ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory,
             int maxRetryAttempts = 5)
@@ -40,20 +41,33 @@ namespace RealTimeCharts.Infra.Bus
             _logger = logger;
             _subscriptionManager = subscriptionManager;
             _busPersistentConnection = busPersistentConnection;
+            _queueExchangeManager = queueExchangeManager;
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
             _maxRetryAttempts = maxRetryAttempts;
-            _exchangeCreated = false;
+        }
+
+        private void CreatePublishingChannel()
+        {
+            _logger.LogInformation("Creating publishing channel");
+            _publishingChannel = _busPersistentConnection.CreateChannel();
+            _publishingChannel.CallbackException += (sender, ea) =>
+            {
+                _logger.LogWarning(ea.Exception, "Publishing channel failed, trying to restore it");
+                _publishingChannel.Dispose(); //dúvida aqui
+                CreatePublishingChannel();
+            };
+            _logger.LogInformation("Publishing channel created");
         }
 
         public void Publish(Event @event)
         {
             _logger.LogInformation($"Creating channel to publish event");
-            CheckConnection();
-            using var channel = _busPersistentConnection.CreateChannel();
-            _logger.LogInformation($"Channel created");
+            _busPersistentConnection.CheckConnection();
+            _queueExchangeManager.EnsureExchangeExists();
 
-            CreateExchange(channel);
+            if (_publishingChannel == null || !_publishingChannel.IsOpen)
+                CreatePublishingChannel();
 
             string eventName = @event.GetType().Name;
             _logger.LogInformation($"Serializing {eventName}");
@@ -71,9 +85,9 @@ namespace RealTimeCharts.Infra.Bus
 
             publishPolicy.Execute(() =>
             {
-                var properties = channel.CreateBasicProperties();
+                var properties = _publishingChannel.CreateBasicProperties();
                 properties.DeliveryMode = 2;
-                channel.BasicPublish(
+                _publishingChannel.BasicPublish(
                     exchange: _rabbitMqConfig.ExchangeName,
                     routingKey: eventName,
                     basicProperties: properties,
@@ -86,84 +100,39 @@ namespace RealTimeCharts.Infra.Bus
             where E : Event
             where H : IEventHandler<E>
         {
-            _subscriptionManager.AddSubscription<E, H>();
-            _consumerChannel = CreateConsumerChannel();
-            BindQueueToEvent<E>();
-            StartBasicConsume();
+            _subscriptionManager.AddSubscription<E, H>(); 
+            _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
         }
 
-        private void BindQueueToEvent<E>() where E : Event
+        public void StartConsuming()
         {
-            string eventName = typeof(E).Name;
-            _logger.LogInformation($"Binding queue to receive {eventName}");
-            CheckConnection();
+            _logger.LogInformation($"Starting event consumption");
+            _busPersistentConnection.CheckConnection();
+            _queueExchangeManager.EnsureExchangeExists();
+            _queueExchangeManager.EnsureQueueExists(); //d~uvida no que faz quando ensure queue, se binda de novo e como
 
-            _consumerChannel.QueueBind(
-                            queue: _rabbitMqConfig.QueueName,
-                            exchange: _rabbitMqConfig.ExchangeName,
-                            routingKey: eventName);
-            _logger.LogInformation("Queue bound to exchange");
-        }
-
-        private void CreateExchange(IModel channel)
-        {
-            if (!_exchangeCreated)
-            {
-                _logger.LogInformation("Creating exchange to publish events");
-                channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
-                _exchangeCreated = true;
-                _logger.LogInformation("Exchange created");
-            }
-        }
-
-        private IModel CreateConsumerChannel()
-        {
             _logger.LogInformation($"Creating consumer channel");
-            CheckConnection();
-            var channel = _busPersistentConnection.CreateChannel();
-            CreateExchange(channel);
-            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
-                                 durable: true,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
-
-            channel.CallbackException += (sender, ea) =>
+            var consumerChannel = _busPersistentConnection.CreateChannel();
+            consumerChannel.BasicQos(0, 1, false);
+            consumerChannel.CallbackException += (sender, ea) =>
             {
-                _logger.LogWarning(ea.Exception, "Recreating consumer channel");
-                _consumerChannel.Dispose();
-                _consumerChannel = CreateConsumerChannel();
-                StartBasicConsume();
+                _logger.LogWarning(ea.Exception, "Consumer channel failed, trying to restore it");
+                consumerChannel.Dispose(); //dúvida aqui
+                StartConsuming();
             };
-
             _logger.LogInformation($"Consumer channel created");
-            return channel;
+
+            _logger.LogInformation("Starting basic consume");
+            var consumer = new AsyncEventingBasicConsumer(consumerChannel);
+            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
+            consumerChannel.BasicConsume(
+                queue: _rabbitMqConfig.QueueName,
+                autoAck: false,
+                consumer: consumer);
+            _logger.LogInformation("Basic consume started");
         }
 
-        private void CheckConnection()
-        {
-            if (!_busPersistentConnection.IsConnected)
-                _busPersistentConnection.StartPersistentConnection();
-        }
-
-        private void StartBasicConsume()
-        {
-            if (_consumerChannel != null)
-            {
-                _logger.LogInformation("Starting basic consume");
-                var consumer = new AsyncEventingBasicConsumer(_consumerChannel);
-                consumer.Received += Consumer_Received;
-                _consumerChannel.BasicConsume(
-                    queue: _rabbitMqConfig.QueueName,
-                    autoAck: false,
-                    consumer: consumer);
-                _logger.LogInformation("Basic consume started");
-            }
-            else
-                _logger.LogError("Consumer channel not created");
-        }
-
-        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs)
+        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs, IModel consumerChannel)
         {
             var eventName = eventArgs.RoutingKey;
             var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
@@ -177,7 +146,7 @@ namespace RealTimeCharts.Infra.Bus
                 _logger.LogError($"Failed process event {eventName}: {ex.Message}");
             }
 
-            _consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+            consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
         }
 
         private async Task ProcessEvent(string eventName, string message)

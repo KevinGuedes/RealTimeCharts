@@ -1,20 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Exceptions;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RealTimeCharts.Infra.Bus
 {
@@ -23,9 +17,9 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<BusPersistentConnection> _logger;
         private readonly IConnectionFactory _connectionFactory;
         private readonly int _maxRetryAttempts;
-        IConnection _connection;
-        bool _disposed;
-        object sync_root = new();
+        private readonly object sync_root = new();
+        private IConnection _connection;
+        private bool _disposed;
 
         public BusPersistentConnection(
             ILogger<BusPersistentConnection> logger,
@@ -50,11 +44,10 @@ namespace RealTimeCharts.Infra.Bus
             if (_disposed)
                 return;
 
-            _disposed = true;
-
             try
             {
                 _connection.Dispose();
+                _disposed = true;
             }
             catch (IOException ex)
             {
@@ -70,13 +63,20 @@ namespace RealTimeCharts.Infra.Bus
             return _connection.CreateModel();
         }
 
-        public bool StartPersistentConnection()
+        public void CheckConnection()
+        {
+            if (!IsConnected)
+                StartPersistentConnection();
+        }
+
+        public void StartPersistentConnection()
         {
             _logger.LogInformation("Starting persistent connection");
 
             lock (sync_root)
             {
-                var connectionPolicy = RetryPolicy.Handle<BrokerUnreachableException>()
+                var connectionPolicy = RetryPolicy
+                    .Handle<BrokerUnreachableException>()
                     .Or<SocketException>()
                     .WaitAndRetry(_maxRetryAttempts, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
@@ -94,34 +94,36 @@ namespace RealTimeCharts.Infra.Bus
                     _connection.CallbackException += OnCallbackException;
                     _connection.ConnectionBlocked += OnConnectionBlocked;
                     _logger.LogInformation("Event Bus acquired persistent connection with AMQP service in and is subscribed to failure events", _connection.Endpoint.HostName);
-                    return true;
                 }
                 else
-                {
                     _logger.LogCritical("Connection to AMQP service could not be stablished");
-                    return false;
-                }
             }
         }
 
         private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to blocked connection. Trying to reconnect");
-            StartPersistentConnection();
+            _logger.LogCritical($"Connection to AMQP service lost due to blocked connection: {e.Reason}");
+            RestoreConnection();
         }
 
         private void OnCallbackException(object sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to exception. Trying to reconnect");
-            StartPersistentConnection();
+            _logger.LogCritical($"Connection to AMQP service lost due to exception: {e.Exception.Message}");
+            RestoreConnection();
         }
 
         private void OnConnectionShutdown(object sender, ShutdownEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogWarning("Connection to AMQP service lost due to shutdown. Trying to reconnect");
+            _logger.LogCritical($"Connection to AMQP service lost due to shutdown: {e.ReplyText}");
+            RestoreConnection();
+        }
+
+        private void RestoreConnection()
+        {
+            _logger.LogCritical("Trying to restore connection");
             StartPersistentConnection();
         }
     }
