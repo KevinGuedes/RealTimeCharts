@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RealTimeCharts.Infra.IoC;
 using RealTimeCharts.Microservices.ClientDispatcher.Handlers;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
@@ -25,7 +26,10 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
 
                     services.AddRabbitMQBus(hostContext.Configuration);
                     var sp = services.BuildServiceProvider();
-                    services.AddSingleton<HubConnection>(sp => SignalRConnectionFactory.CreateHubConnection(hostContext, sp));
+                    services.AddSingleton<HubConnection>(sp => {
+                        var logger = sp.GetService<ILogger<Program>>();
+                        return SignalRConnectionFactory.CreateHubConnection(hostContext, logger);
+                    });
                     services.AddSingleton<IDispatcherService, DispatcherService>();
 
                     services.AddHostedService<Worker>();

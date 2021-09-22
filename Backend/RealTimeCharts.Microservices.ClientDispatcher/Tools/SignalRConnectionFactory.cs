@@ -9,9 +9,8 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
 {
     public static class SignalRConnectionFactory
     {
-        public static HubConnection CreateHubConnection(HostBuilderContext hostContext, IServiceProvider sp)
+        public static HubConnection CreateHubConnection(HostBuilderContext hostContext, ILogger<Program> logger)
         {
-            var logger = sp.GetService<ILogger<Program>>();
             var connection = new HubConnectionBuilder()
                 .WithUrl(new Uri(hostContext.Configuration.GetValue<string>("DataHubUrl")))
                 .Build();
