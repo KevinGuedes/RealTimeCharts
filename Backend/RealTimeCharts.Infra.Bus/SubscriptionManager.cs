@@ -19,33 +19,31 @@ namespace RealTimeCharts.Infra.Bus
             _eventTypes = new List<Type>();
         }
 
-        public void AddSubscription<E, H>()
+        public void AddSubscription<E>()
             where E : Event
-            where H : IEventHandler<E>
         {
             string eventName = GetEventName<E>();
-            var handlerType = typeof(H);
 
             if (!_eventTypes.Contains(typeof(E)))
                 _eventTypes.Add(typeof(E));
 
-            if (!HasSubscriptionsForEvent(eventName))
-                _handlers.Add(eventName, new List<Type>());
+            //if (!HasSubscriptionsForEvent(eventName))
+            //    _handlers.Add(eventName, new List<Type>());
 
-            if (_handlers[eventName].Any(s => s.GetType() == handlerType))
-                throw new HandlerAlreadyRegisteredException($"Handler type {handlerType.Name} already is registered for {eventName}");
+            //if (_handlers[eventName].Any(s => s.GetType() == handlerType))
+            //    throw new HandlerAlreadyRegisteredException($"Handler type {handlerType.Name} already is registered for {eventName}");
 
-            _handlers[eventName].Add(handlerType);
+            //_handlers[eventName].Add(handlerType);
         }
 
-        public bool HasSubscriptionsForEvent(string eventName)
-            => _handlers.ContainsKey(eventName);
+        //public bool HasSubscriptionsForEvent(string eventName)
+        //    => _handlers.ContainsKey(eventName);
 
         public Type GetEventTypeByName(string eventName)
             => _eventTypes.SingleOrDefault(eventType => eventType.Name == eventName);
 
-        public IEnumerable<Type> GetHandlersForEvent(string eventName) 
-            => _handlers[eventName];
+        //public IEnumerable<Type> GetHandlersForEvent(string eventName) 
+        //    => _handlers[eventName];
 
         public string GetEventName<E>() where E : Event
             => typeof(E).Name;

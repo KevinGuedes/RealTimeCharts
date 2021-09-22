@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using OperationResult;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
@@ -10,7 +12,6 @@ using RabbitMQ.Client.Exceptions;
 using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Net.Sockets;
 using System.Text;
@@ -95,11 +96,10 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation($"{eventName} with Id: {@event.Id} published");
         }
 
-        public void Subscribe<E, H>()
+        public void Subscribe<E>()
             where E : Event
-            where H : IEventHandler<E>
         {
-            _subscriptionManager.AddSubscription<E, H>(); 
+            _subscriptionManager.AddSubscription<E>();
             _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
         }
 
@@ -153,27 +153,14 @@ namespace RealTimeCharts.Infra.Bus
 
         private async Task ProcessEvent(string eventName, string message)
         {
-            if (_subscriptionManager.HasSubscriptionsForEvent(eventName))
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var subscriptions = _subscriptionManager.GetHandlersForEvent(eventName);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            var eventType = _subscriptionManager.GetEventTypeByName(eventName);
 
-                foreach (var subscription in subscriptions)
-                {
-                    var handler = scope.ServiceProvider.GetService(subscription);
-                    if (handler == null) continue;
+            _logger.LogInformation($"Deserializing {eventName}");
+            var @event = JsonConvert.DeserializeObject(message, eventType);
 
-                    var eventType = _subscriptionManager.GetEventTypeByName(eventName);
-
-                    _logger.LogInformation($"Deserializing {eventName}");
-                    var @event = JsonConvert.DeserializeObject(message, eventType);
-
-                    var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
-                    await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
-                }
-            }
-            else
-                _logger.LogWarning($"No subscription found for {eventName}");
+            var result = await mediator.Send(@event);
         }
     }
 }

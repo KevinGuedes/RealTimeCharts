@@ -1,8 +1,10 @@
-﻿using System;
+﻿using MediatR;
+using OperationResult;
+using System;
 
 namespace RealTimeCharts.Shared.Events
 {
-    public abstract class Event
+    public abstract class Event : IRequest<Result>
     {
         public Guid Id { get; set; }
 
