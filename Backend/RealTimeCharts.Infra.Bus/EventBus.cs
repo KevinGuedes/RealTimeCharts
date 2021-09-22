@@ -53,9 +53,8 @@ namespace RealTimeCharts.Infra.Bus
             _publishingChannel = _busPersistentConnection.CreateChannel();
             _publishingChannel.CallbackException += (sender, ea) =>
             {
-                _logger.LogWarning(ea.Exception, "Publishing channel failed, trying to restore it");
+                _logger.LogCritical(ea.Exception, "Publishing channel failed, trying to restore it");
                 _publishingChannel.Close();
-                _busPersistentConnection.CheckConnection();
                 CreatePublishingChannel();
             };
             _logger.LogInformation("Publishing channel created");
@@ -64,7 +63,6 @@ namespace RealTimeCharts.Infra.Bus
         public void Publish(Event @event)
         {
             _logger.LogInformation($"Creating channel to publish event");
-            _busPersistentConnection.CheckConnection();
             _queueExchangeManager.EnsureExchangeExists();
 
             if (_publishingChannel == null || !_publishingChannel.IsOpen)
@@ -108,16 +106,16 @@ namespace RealTimeCharts.Infra.Bus
         public void StartConsuming()
         {
             _logger.LogInformation($"Starting event consumption");
-            _busPersistentConnection.CheckConnection();
             _queueExchangeManager.EnsureExchangeExists();
             _queueExchangeManager.EnsureQueueExists();
+            _queueExchangeManager.EnsureDeadLetterIsConfigured();
 
             _logger.LogInformation($"Creating consumer channel");
             var consumerChannel = _busPersistentConnection.CreateChannel();
             consumerChannel.BasicQos(0, 1, false);
             consumerChannel.CallbackException += (sender, ea) =>
             {
-                _logger.LogWarning(ea.Exception, "Consumer channel failed, trying to restore it");
+                _logger.LogCritical(ea.Exception, "Consumer channel failed, trying to restore it");
                 consumerChannel.Close();
                 StartConsuming();
             };
@@ -140,14 +138,14 @@ namespace RealTimeCharts.Infra.Bus
 
             try
             {
-                _logger.LogTrace($"Processing {eventName}");
+                _logger.LogInformation($"Processing {eventName}");
                 await ProcessEvent(eventName, message);
                 consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
-                _logger.LogTrace($"{eventName} processed and acknowledged");
+                _logger.LogInformation($"{eventName} processed and acknowledged");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Failed to process event {eventName}: {ex.Message}");
+                _logger.LogError(ex, $"Failed to process event {eventName}");
                 consumerChannel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
                 _logger.LogWarning($"{eventName} negative acknowledged");
             }

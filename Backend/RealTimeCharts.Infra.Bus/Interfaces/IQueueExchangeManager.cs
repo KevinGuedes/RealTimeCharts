@@ -7,7 +7,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
     {
         void EnsureExchangeExists();
         void EnsureQueueExists();
-        //void CreateExchange(IModel channel);
+        void EnsureDeadLetterIsConfigured();
         void ConfigureSubscriptionForEvent<E>() where E : Event;
     }
 }

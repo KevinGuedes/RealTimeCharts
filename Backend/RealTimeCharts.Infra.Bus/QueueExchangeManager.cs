@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
+using System.Collections.Generic;
 
 namespace RealTimeCharts.Infra.Bus
 {
@@ -14,6 +15,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly IBusPersistentConnection _busPersistentConnection;
         private bool _isExchangeCreated;
         private bool _isQueueCreated;
+        private bool _isDeadLetterConfigured;
 
         public QueueExchangeManager(
             ILogger<QueueExchangeManager> logger,
@@ -25,15 +27,15 @@ namespace RealTimeCharts.Infra.Bus
             _rabbitMqConfig = rabbitMqConfig.Value;
             _isExchangeCreated = false;
             _isQueueCreated = false;
+            _isDeadLetterConfigured = false;
         }
 
         public void EnsureExchangeExists()
         {
             if (!_isExchangeCreated)
             {
-                var channel = CreateChannel();
+                using var channel = _busPersistentConnection.CreateChannel();
                 CreateExchange(channel);
-                channel.Close();
             }
         }
 
@@ -41,9 +43,17 @@ namespace RealTimeCharts.Infra.Bus
         {
             if (!_isQueueCreated)
             {
-                var channel = CreateChannel();
+                using var channel = _busPersistentConnection.CreateChannel();
                 CreateQueue(channel);
-                channel.Close();
+            }
+        }
+
+        public void EnsureDeadLetterIsConfigured()
+        {
+            if (!_isDeadLetterConfigured)
+            {
+                using var channel = _busPersistentConnection.CreateChannel();
+                ConfigureDeadLetter(channel);
             }
         }
 
@@ -52,11 +62,11 @@ namespace RealTimeCharts.Infra.Bus
             string eventName = typeof(E).Name;
             _logger.LogInformation($"Configuring subscription for {eventName}");
 
-            var channel = CreateChannel();
+            using var channel = _busPersistentConnection.CreateChannel();
             CreateExchange(channel);
             CreateQueue(channel);
             BindQueueToExchangeForEvent(eventName, channel);
-            channel.Close();
+            ConfigureDeadLetter(channel);
 
             _logger.LogInformation($"Subscription for {eventName} configured");
         }
@@ -77,23 +87,15 @@ namespace RealTimeCharts.Infra.Bus
                                 durable: true,
                                 exclusive: false,
                                 autoDelete: false,
-                                arguments: null);
+                                arguments: new Dictionary<string, object>
+                                    {
+                                        {"x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchange},
+                                        {"x-dead-letter-routing-key", $"{_rabbitMqConfig.QueueName}-error"},
+                                    }
+                                );
             _isQueueCreated = true;
 
             _logger.LogInformation("Queue created");
-        }
-
-        private void CreateDeadLetterQueue(IModel channel)
-        {
-            _logger.LogInformation("Creating dead letter queue");
-            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
-                                durable: true,
-                                exclusive: false,
-                                autoDelete: false,
-                                arguments: null);
-            _isQueueCreated = true;
-
-            _logger.LogInformation("Dead letter queue created");
         }
 
         private void BindQueueToExchangeForEvent(string eventName, IModel channel)
@@ -106,10 +108,22 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Queue bound to exchange");
         }
 
-        private IModel CreateChannel()
+        private void ConfigureDeadLetter(IModel channel)
         {
-            _busPersistentConnection.CheckConnection();
-            return _busPersistentConnection.CreateChannel();
+            _logger.LogInformation("Configuring dead letter flow");
+            channel.ExchangeDeclare(exchange: _rabbitMqConfig.DeadLetterExchange, type: "direct");
+            channel.QueueDeclare(queue: _rabbitMqConfig.DeadLetterQueueName,
+                               durable: true,
+                               exclusive: false,
+                               autoDelete: false,
+                               arguments: new Dictionary<string, object>
+                                    {
+                                        { "x-queue-mode", "lazy" }
+                                    }
+                                );
+            channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, $"{_rabbitMqConfig.QueueName}-error");
+            _isDeadLetterConfigured = true;
+            _logger.LogInformation("Dead letter flow configured");
         }
     }
 }
