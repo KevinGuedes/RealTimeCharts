@@ -4,6 +4,7 @@ using OperationResult;
 using RealTimeCharts.Application.Data.Requests;
 using RealTimeCharts.Domain.Events;
 using RealTimeCharts.Infra.Bus.Interfaces;
+using RealTimeCharts.Shared.Handlers;
 using System.Threading;
 using System.Threading.Tasks;
 

@@ -7,12 +7,10 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
 {
     public interface ISubscriptionManager
     {
-        void AddSubscription<E, H>()
-           where E : Event
-           where H : IEventHandler<E>;
-        bool HasSubscriptionsForEvent(string eventName);
+        void AddSubscription<E>()
+           where E : Event;
+
         Type GetEventTypeByName(string eventName);
-        IEnumerable<Type> GetHandlersForEvent(string eventName);
         string GetEventName<E>() where E : Event;
     }
 }

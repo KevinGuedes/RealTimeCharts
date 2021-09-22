@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using RealTimeCharts.Infra.IoC;
-using System.Reflection;
 
 namespace RealTimeCharts.Presentation.Api
 {
@@ -21,10 +20,8 @@ namespace RealTimeCharts.Presentation.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRabbitMQBus(Configuration);
-            services.AddMediatRToAppHandlers();
-            services.AddMediatRToAssemblies(new Assembly[] { 
-               Assembly.GetExecutingAssembly()
-            });
+            services.ConfigureMediatR();
+            
             services.ConfigureValidators();
 
             services.AddControllers();

@@ -18,6 +18,7 @@ namespace RealTimeCharts.Infra.IoC
     {
         public static void AddRabbitMQBus(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddMediatR(Assembly.GetCallingAssembly());
             services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
             services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
             services.AddSingleton<IQueueExchangeManager, QueueExchangeManager>();
@@ -41,11 +42,10 @@ namespace RealTimeCharts.Infra.IoC
             services.AddSingleton<IEventBus, EventBus>();
         }
 
-        public static void AddMediatRToAssemblies(this IServiceCollection services, Assembly[] assemblies)
-            => services.AddMediatR(assemblies);
-
-        public static void AddMediatRToAppHandlers(this IServiceCollection services)
-            => services.AddMediatR(AppDomain.CurrentDomain.Load("RealTimeCharts.Application"));
+        public static void ConfigureMediatR(this IServiceCollection services) {
+            services.AddMediatR(AppDomain.CurrentDomain.Load("RealTimeCharts.Application"));
+            services.AddMediatR(Assembly.GetCallingAssembly());
+        }
 
         public static void ConfigureValidators(this IServiceCollection services)
             => services.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<GenerateDataRequestValidator>());

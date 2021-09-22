@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using MediatR;
+using Microsoft.Extensions.Logging;
 using OperationResult;
 using RealTimeCharts.Microservices.ClientDispatcher.Events;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
 using RealTimeCharts.Shared.Handlers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
@@ -18,7 +20,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
             _dispatcherService = dispatcherService;
         }
 
-        public async Task<Result> Handle(DataGenerationFinishedEvent @event)
+        public async Task<Result> Handle(DataGenerationFinishedEvent @event, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"Dispatching data generation finished notification to client with id {@event.ConnectionId}");
             await _dispatcherService.DispatchDataGenerationFinishedNotification(@event.Success, @event.ConnectionId);
