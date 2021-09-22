@@ -27,6 +27,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Weibull] = new(0, 16, 0.4),
             [DataType.BirbaumSaunders] = new(0.1, 16, 0.4),
             [DataType.Dagum] = new(0, 16, 0.4),
+            [DataType.Invalid] = new(0, 1, 1),
         };
 
         public int GetSleepTimeByGenerationRate(DataGenerationRate rate)

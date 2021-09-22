@@ -58,15 +58,9 @@ namespace RealTimeCharts.Infra.Bus
         public IModel CreateChannel()
         {
             if (!IsConnected)
-                throw new NoConnectionEstablishedException("No connection available to perform operation of create channel");
+                StartPersistentConnection();
 
             return _connection.CreateModel();
-        }
-
-        public void CheckConnection()
-        {
-            if (!IsConnected)
-                StartPersistentConnection();
         }
 
         public void StartPersistentConnection()
@@ -80,7 +74,7 @@ namespace RealTimeCharts.Infra.Bus
                     .Or<SocketException>()
                     .WaitAndRetry(_maxRetryAttempts, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                     {
-                        _logger.LogWarning(ex, $"Failed to connect to AMQP service after {time.TotalSeconds:n1}s: ({ex.Message})");
+                        _logger.LogError(ex, $"Failed to connect to AMQP service after {time.TotalSeconds:n1}s");
                     });
 
                 connectionPolicy.Execute(() =>
@@ -96,7 +90,7 @@ namespace RealTimeCharts.Infra.Bus
                     _logger.LogInformation("Event Bus acquired persistent connection with AMQP service in and is subscribed to failure events", _connection.Endpoint.HostName);
                 }
                 else
-                    _logger.LogCritical("Connection to AMQP service could not be stablished");
+                    _logger.LogCritical("Connection to AMQP service could not be established");
             }
         }
 
@@ -110,7 +104,7 @@ namespace RealTimeCharts.Infra.Bus
         private void OnCallbackException(object sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
-            _logger.LogCritical($"Connection to AMQP service lost due to exception: {e.Exception.Message}");
+            _logger.LogCritical(e.Exception, $"Connection to AMQP service lost due to exception: {e.Exception.Message}");
             RestoreConnection();
         }
 
@@ -123,7 +117,7 @@ namespace RealTimeCharts.Infra.Bus
 
         private void RestoreConnection()
         {
-            _logger.LogCritical("Trying to restore connection");
+            _logger.LogWarning("Trying to restore connection");
             StartPersistentConnection();
         }
     }

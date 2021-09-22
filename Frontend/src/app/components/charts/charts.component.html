@@ -71,7 +71,7 @@
 
       <h3 *ngIf="!connectedWithSignalR; else failedToGenerateData">Connection with SignalR was lost, try again later!</h3>
       <ng-template #failedToGenerateData>
-            <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
+        <h3>Failed to generate {{dataTypeNameInProcess}} data, try another one!</h3>
       </ng-template>
 
       <button class="charts__form-container__fail-message__dismiss" mat-raised-button color="warn" (click)="showFailMessage = false">
