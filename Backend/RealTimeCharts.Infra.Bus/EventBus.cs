@@ -123,7 +123,7 @@ namespace RealTimeCharts.Infra.Bus
 
             _logger.LogInformation("Starting basic consume");
             var consumer = new AsyncEventingBasicConsumer(consumerChannel);
-            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
+            consumer.Received += (sender, eventArgs) => Consumer_Received(eventArgs, consumerChannel);
             consumerChannel.BasicConsume(
                 queue: _rabbitMqConfig.QueueName,
                 autoAck: false,
@@ -131,7 +131,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Basic consume started");
         }
 
-        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs, IModel consumerChannel)
+        private async Task Consumer_Received(BasicDeliverEventArgs eventArgs, IModel consumerChannel)
         {
             var eventName = eventArgs.RoutingKey;
             var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
@@ -139,28 +139,41 @@ namespace RealTimeCharts.Infra.Bus
             try
             {
                 _logger.LogInformation($"Processing {eventName}");
-                await ProcessEvent(eventName, message);
-                consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
-                _logger.LogInformation($"{eventName} processed and acknowledged");
+                var result = await ProcessEvent(eventName, message);
+
+                if (result.IsSuccess)
+                {
+                    consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+                    _logger.LogInformation($"{eventName} successfully processed");
+                }
+                else
+                    NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, result.Exception);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to process event {eventName}");
-                consumerChannel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
-                _logger.LogWarning($"{eventName} negative acknowledged");
+                NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, ex);
             }
         }
 
-        private async Task ProcessEvent(string eventName, string message)
+        private async Task<Result> ProcessEvent(string eventName, string message)
         {
             using var scope = _serviceScopeFactory.CreateScope();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            var eventType = _subscriptionManager.GetEventTypeByName(eventName);
 
             _logger.LogInformation($"Deserializing {eventName}");
+            var eventType = _subscriptionManager.GetEventTypeByName(eventName);
             var @event = JsonConvert.DeserializeObject(message, eventType);
 
-            var result = await mediator.Send(@event);
+            _logger.LogInformation($"Handling event {eventName}");
+            dynamic result = await mediator.Send(@event);
+            return result;
+        }
+
+        private void NegativeAcknowledgeEvent(string eventName, IModel channel, BasicDeliverEventArgs eventArgs, Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to process event {eventName}");
+            channel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
+            _logger.LogWarning($"{eventName} negative acknowledged");
         }
     }
 }

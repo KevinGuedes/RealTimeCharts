@@ -16,7 +16,7 @@ namespace RealTimeCharts.Presentation.Api.Controllers
         public DataController(ILogger<DataController> logger, IMediator mediator) : base(mediator)
             => _logger = logger;
 
-        [HttpPost("generate")]
+        [HttpPost]
         public async Task<IActionResult> GenerateData([FromBody] GenerateDataRequest generateDataRequest, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Generate Data endpoint accessed");
