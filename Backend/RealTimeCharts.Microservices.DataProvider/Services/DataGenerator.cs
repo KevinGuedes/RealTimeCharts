@@ -24,9 +24,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Polynomial] = new(-4, 7, 0.5),
             [DataType.Logarithmic] = new(0, 10, 0.2),
             [DataType.Fibonacci] = new(1, 30, 1),
-            [DataType.Weibull] = new(0, 16, 0.4),
-            [DataType.BirbaumSaunders] = new(0.1, 16, 0.4),
-            [DataType.Dagum] = new(0, 16, 0.4),
+            [DataType.Weibull] = new(0, 17, 0.5),
+            [DataType.BirbaumSaunders] = new(0.1, 17, 0.5),
+            [DataType.Dagum] = new(0, 17, 0.5),
             [DataType.Invalid] = new(0, 1, 1),
         };
 
