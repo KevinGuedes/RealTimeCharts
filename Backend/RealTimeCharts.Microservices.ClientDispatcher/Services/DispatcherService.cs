@@ -14,7 +14,7 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Services
             => _hubConnection = hubConnection;
 
         public Task DispatchData(DataPoint dataPoint, string connectionId)
-            => _hubConnection.InvokeAsync("DataPointDispatched", JsonConvert.SerializeObject(dataPoint, Formatting.Indented), connectionId);
+            => _hubConnection.InvokeAsync("DataPointDispatched", JsonConvert.SerializeObject(dataPoint), connectionId);
 
         public Task DispatchDataGenerationFinishedNotification(bool success, string connectionId)
             => _hubConnection.InvokeAsync("DataGenerationFinishedNotificationDispatched", success, connectionId);
