@@ -30,7 +30,7 @@ namespace RealTimeCharts.Infra.Bus
             _maxRetryAttempts = maxRetryAttempts;
         }
 
-        public bool IsConnected
+        private bool IsConnected
         {
             get
             {
