@@ -41,6 +41,7 @@ export class SignalrService {
   private async startConnection(): Promise<void> {
     await this._hubConnection.start().then(() => {
       this._isConnected = true;
+      this.connectionStatus.emit(this._isConnected);
       if (this._hubConnection.connectionId)
         this._connectionId = this._hubConnection.connectionId;
     });
