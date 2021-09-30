@@ -128,6 +128,7 @@ namespace RealTimeCharts.Infra.Bus
                 queue: _rabbitMqConfig.QueueName,
                 autoAck: false,
                 consumer: consumer);
+
             _logger.LogInformation("Basic consume started");
         }
 

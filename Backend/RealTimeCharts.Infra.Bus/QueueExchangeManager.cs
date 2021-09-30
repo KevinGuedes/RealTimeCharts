@@ -60,6 +60,7 @@ namespace RealTimeCharts.Infra.Bus
         public void ConfigureSubscriptionForEvent<E>() where E : Event
         {
             string eventName = typeof(E).Name;
+
             _logger.LogInformation($"Configuring subscription for {eventName}");
 
             using var channel = _busPersistentConnection.CreateChannel();
@@ -74,6 +75,7 @@ namespace RealTimeCharts.Infra.Bus
         private void CreateExchange(IModel channel)
         {
             _logger.LogInformation("Creating exchange to publish events");
+
             channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
             _isExchangeCreated = true;
 
@@ -83,6 +85,7 @@ namespace RealTimeCharts.Infra.Bus
         private void CreateQueue(IModel channel)
         {
             _logger.LogInformation("Creating queue");
+
             channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
                                 durable: true,
                                 exclusive: false,
@@ -101,6 +104,7 @@ namespace RealTimeCharts.Infra.Bus
         private void BindQueueToExchangeForEvent(string eventName, IModel channel)
         {
             _logger.LogInformation($"Binding queue to receive {eventName}");
+
             channel.QueueBind(queue: _rabbitMqConfig.QueueName,
                               exchange: _rabbitMqConfig.ExchangeName,
                               routingKey: eventName);
@@ -111,6 +115,7 @@ namespace RealTimeCharts.Infra.Bus
         private void ConfigureDeadLetter(IModel channel)
         {
             _logger.LogInformation("Configuring dead letter flow");
+
             channel.ExchangeDeclare(exchange: _rabbitMqConfig.DeadLetterExchange, type: "direct");
             channel.QueueDeclare(queue: _rabbitMqConfig.DeadLetterQueueName,
                                durable: true,
@@ -123,6 +128,7 @@ namespace RealTimeCharts.Infra.Bus
                                 );
             channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, $"{_rabbitMqConfig.QueueName}-error");
             _isDeadLetterConfigured = true;
+
             _logger.LogInformation("Dead letter flow configured");
         }
     }
