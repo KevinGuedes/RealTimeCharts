@@ -23,9 +23,9 @@ namespace RealTimeCharts.Infra.IoC
             services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
             services.AddSingleton<IQueueExchangeManager, QueueExchangeManager>();
             services.AddSingleton<IServiceScopeFactory>(sp => sp.GetRequiredService<IServiceScopeFactory>());
-            services.AddSingleton<IBusPersistentConnection, BusPersistentConnection>(sp =>
+            services.AddSingleton<IEventBusPersistentConnection, EventBusPersistentConnection>(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<BusPersistentConnection>>();
+                var logger = sp.GetRequiredService<ILogger<EventBusPersistentConnection>>();
                 var rabbitMqConfig = sp.GetService<IOptions<RabbitMQConfigurations>>();
                 var connectionFactory = new ConnectionFactory()
                 {

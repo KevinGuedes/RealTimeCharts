@@ -12,7 +12,7 @@ namespace RealTimeCharts.Infra.Bus
     {
         private readonly ILogger<QueueExchangeManager> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
-        private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly IEventBusPersistentConnection _eventBusPersistentConnection;
         private bool _isExchangeCreated;
         private bool _isQueueCreated;
         private bool _isDeadLetterConfigured;
@@ -20,10 +20,10 @@ namespace RealTimeCharts.Infra.Bus
         public QueueExchangeManager(
             ILogger<QueueExchangeManager> logger,
             IOptions<RabbitMQConfigurations> rabbitMqConfig,
-            IBusPersistentConnection busPersistentConnection)
+            IEventBusPersistentConnection busPersistentConnection)
         {
             _logger = logger;
-            _busPersistentConnection = busPersistentConnection;
+            _eventBusPersistentConnection = busPersistentConnection;
             _rabbitMqConfig = rabbitMqConfig.Value;
             _isExchangeCreated = false;
             _isQueueCreated = false;
@@ -34,7 +34,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             if (!_isExchangeCreated)
             {
-                using var channel = _busPersistentConnection.CreateChannel();
+                using var channel = _eventBusPersistentConnection.CreateChannel();
                 CreateExchange(channel);
             }
         }
@@ -43,7 +43,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             if (!_isQueueCreated)
             {
-                using var channel = _busPersistentConnection.CreateChannel();
+                using var channel = _eventBusPersistentConnection.CreateChannel();
                 CreateQueue(channel);
             }
         }
@@ -52,7 +52,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             if (!_isDeadLetterConfigured)
             {
-                using var channel = _busPersistentConnection.CreateChannel();
+                using var channel = _eventBusPersistentConnection.CreateChannel();
                 ConfigureDeadLetter(channel);
             }
         }
@@ -63,7 +63,7 @@ namespace RealTimeCharts.Infra.Bus
 
             _logger.LogInformation($"Configuring subscription for {eventName}");
 
-            using var channel = _busPersistentConnection.CreateChannel();
+            using var channel = _eventBusPersistentConnection.CreateChannel();
             CreateExchange(channel);
             CreateQueue(channel);
             BindQueueToExchangeForEvent(eventName, channel);

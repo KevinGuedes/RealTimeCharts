@@ -23,7 +23,7 @@ namespace RealTimeCharts.Infra.Bus
     {
         private readonly ILogger<EventBus> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
-        private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly IEventBusPersistentConnection _eventBusPersistentConnection;
         private readonly IQueueExchangeManager _queueExchangeManager;
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -33,7 +33,7 @@ namespace RealTimeCharts.Infra.Bus
         public EventBus(
             ILogger<EventBus> logger,
             IOptions<RabbitMQConfigurations> rabbitMqConfig,
-            IBusPersistentConnection busPersistentConnection,
+            IEventBusPersistentConnection busPersistentConnection,
             IQueueExchangeManager queueExchangeManager,
             ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory,
@@ -41,7 +41,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             _logger = logger;
             _subscriptionManager = subscriptionManager;
-            _busPersistentConnection = busPersistentConnection;
+            _eventBusPersistentConnection = busPersistentConnection;
             _queueExchangeManager = queueExchangeManager;
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
@@ -51,7 +51,7 @@ namespace RealTimeCharts.Infra.Bus
         private void CreatePublishingChannel()
         {
             _logger.LogInformation("Creating publishing channel");
-            _publishingChannel = _busPersistentConnection.CreateChannel();
+            _publishingChannel = _eventBusPersistentConnection.CreateChannel();
             _publishingChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogCritical(ea.Exception, "Publishing channel failed, trying to restore it");
@@ -109,7 +109,7 @@ namespace RealTimeCharts.Infra.Bus
             _queueExchangeManager.EnsureDeadLetterIsConfigured();
 
             _logger.LogInformation($"Creating consumer channel");
-            var consumerChannel = _busPersistentConnection.CreateChannel();
+            var consumerChannel = _eventBusPersistentConnection.CreateChannel();
             consumerChannel.BasicQos(0, 1, false);
             consumerChannel.CallbackException += (sender, ea) =>
             {

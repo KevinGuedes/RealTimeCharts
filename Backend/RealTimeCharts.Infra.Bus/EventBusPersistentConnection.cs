@@ -11,17 +11,17 @@ using System.Net.Sockets;
 
 namespace RealTimeCharts.Infra.Bus
 {
-    public class BusPersistentConnection : IBusPersistentConnection
+    public class EventBusPersistentConnection : IEventBusPersistentConnection
     {
-        private readonly ILogger<BusPersistentConnection> _logger;
+        private readonly ILogger<EventBusPersistentConnection> _logger;
         private readonly IConnectionFactory _connectionFactory;
         private readonly int _maxRetryAttempts;
         private readonly object sync_root = new();
         private IConnection _connection;
         private bool _disposed;
 
-        public BusPersistentConnection(
-            ILogger<BusPersistentConnection> logger,
+        public EventBusPersistentConnection(
+            ILogger<EventBusPersistentConnection> logger,
             IConnectionFactory connectionFactory,
             int maxRetryAttempts = 5)
         {
