@@ -24,9 +24,9 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             [DataType.Polynomial] = new(-4, 7, 0.5),
             [DataType.Logarithmic] = new(0, 10, 0.2),
             [DataType.Fibonacci] = new(1, 30, 1),
-            [DataType.Weibull] = new(0, 16, 0.4),
-            [DataType.BirbaumSaunders] = new(0.1, 16, 0.4),
-            [DataType.Dagum] = new(0, 16, 0.4),
+            [DataType.Weibull] = new(0, 17, 0.5),
+            [DataType.BirbaumSaunders] = new(0.1, 17, 0.5),
+            [DataType.Dagum] = new(0, 17, 0.5),
             [DataType.Invalid] = new(0, 1, 1),
         };
 
@@ -58,8 +58,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
         private static DataPoint GenerateHeartData(double name)
         {
             var angle = Math.PI * name / 180.0;
-            var value = Math.Round(Convert.ToDouble(3 - 1.5 * Math.Sin(angle) + Math.Cos(2 * angle) - 1.5 * Math.Abs(Math.Cos(angle))), 3);
-            return new(name, value);
+            return new(name, Math.Round(Convert.ToDouble(3 - 1.5 * Math.Sin(angle) + Math.Cos(2 * angle) - 1.5 * Math.Abs(Math.Cos(angle))), 3));
         }
 
         private static DataPoint GenerateLogarithmicData(double name)
@@ -74,7 +73,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
 
         private static DataPoint GenerateFibonacciData(double name)
         {
-            int a = 0, b = 1, c = 0;
+            int a = 0, b = 1, c;
             int n = Convert.ToInt32(name);
 
             for (int i = 2; i <= n; i++)
@@ -91,11 +90,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
         {
             double shape = 0.5;
             double scale = 5;
-            double firstTerm = Math.Pow(Math.E, (-1 / (2 * Math.Pow(shape, 2))) * (name / scale + scale / name - 2));
-            double secondTerm = Math.Pow(scale / name, 0.5) + Math.Pow(scale / name, 1.5);
-            double thirdTerm = 2 * Math.Sqrt(2 * Math.PI) * shape * scale;
-
-            return new(name, firstTerm * secondTerm / thirdTerm);
+            return new(name, (Math.Pow(Math.E, (-1 / (2 * Math.Pow(shape, 2))) * (name / scale + scale / name - 2))) * (Math.Pow(scale / name, 0.5) + Math.Pow(scale / name, 1.5)) / (2 * Math.Sqrt(2 * Math.PI) * shape * scale));
         }
 
         private static DataPoint GenerateDagumData(double name)
@@ -103,10 +98,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Services
             double shape = 0.2;
             double secondShape = 8.7;
             double scale = 7.9;
-            double firstTerm = shape * secondShape * Math.Pow(name / scale, shape * secondShape - 1);
-            double secondTerm = scale * Math.Pow(1 + Math.Pow(name / scale, secondShape), shape + 1);
-
-            return new(name, firstTerm / secondTerm);
+            return new(name, (shape * secondShape * Math.Pow(name / scale, shape * secondShape - 1)) / (scale * Math.Pow(1 + Math.Pow(name / scale, secondShape), shape + 1)));
         }
 
         private static DataPoint GenerateInvalidData(double name)

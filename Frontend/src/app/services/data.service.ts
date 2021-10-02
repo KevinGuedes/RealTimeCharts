@@ -25,7 +25,7 @@ export class DataService {
     const dataType = this.getDataTypeByDataTypeName(DataTypeName[dataTypeName as keyof typeof DataTypeName]);
     const request = new GenerateDataRequest(rate, dataType, this._signalrService.GetConnectionId())
 
-    return this._http.post<GenerateDataRequest>(`${this._apiUrl}/generate`, request).pipe(
+    return this._http.post<GenerateDataRequest>(this._apiUrl, request).pipe(
       map(response => response),
       catchError(error => this.errorHandler(error))
     ).toPromise();

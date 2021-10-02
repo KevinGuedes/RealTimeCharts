@@ -1,7 +1,6 @@
-﻿using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Shared.Models;
+﻿using RealTimeCharts.Shared.Models;
 
-namespace RealTimeCharts.Microservices.DataProvider.Events
+namespace RealTimeCharts.Shared.Events
 {
     public class DataGeneratedEvent : Event
     {

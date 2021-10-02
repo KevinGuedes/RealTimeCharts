@@ -1,7 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using OperationResult;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
@@ -10,7 +12,6 @@ using RabbitMQ.Client.Exceptions;
 using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Shared.Handlers;
 using System;
 using System.Net.Sockets;
 using System.Text;
@@ -22,7 +23,7 @@ namespace RealTimeCharts.Infra.Bus
     {
         private readonly ILogger<EventBus> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
-        private readonly IBusPersistentConnection _busPersistentConnection;
+        private readonly IEventBusPersistentConnection _eventBusPersistentConnection;
         private readonly IQueueExchangeManager _queueExchangeManager;
         private readonly ISubscriptionManager _subscriptionManager;
         private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -32,7 +33,7 @@ namespace RealTimeCharts.Infra.Bus
         public EventBus(
             ILogger<EventBus> logger,
             IOptions<RabbitMQConfigurations> rabbitMqConfig,
-            IBusPersistentConnection busPersistentConnection,
+            IEventBusPersistentConnection busPersistentConnection,
             IQueueExchangeManager queueExchangeManager,
             ISubscriptionManager subscriptionManager,
             IServiceScopeFactory serviceScopeFactory,
@@ -40,7 +41,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             _logger = logger;
             _subscriptionManager = subscriptionManager;
-            _busPersistentConnection = busPersistentConnection;
+            _eventBusPersistentConnection = busPersistentConnection;
             _queueExchangeManager = queueExchangeManager;
             _serviceScopeFactory = serviceScopeFactory;
             _rabbitMqConfig = rabbitMqConfig.Value;
@@ -50,7 +51,7 @@ namespace RealTimeCharts.Infra.Bus
         private void CreatePublishingChannel()
         {
             _logger.LogInformation("Creating publishing channel");
-            _publishingChannel = _busPersistentConnection.CreateChannel();
+            _publishingChannel = _eventBusPersistentConnection.CreateChannel();
             _publishingChannel.CallbackException += (sender, ea) =>
             {
                 _logger.LogCritical(ea.Exception, "Publishing channel failed, trying to restore it");
@@ -62,9 +63,7 @@ namespace RealTimeCharts.Infra.Bus
 
         public void Publish(Event @event)
         {
-            _logger.LogInformation($"Creating channel to publish event");
             _queueExchangeManager.EnsureExchangeExists();
-
             if (_publishingChannel == null || !_publishingChannel.IsOpen)
                 CreatePublishingChannel();
 
@@ -95,11 +94,10 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation($"{eventName} with Id: {@event.Id} published");
         }
 
-        public void Subscribe<E, H>()
+        public void Subscribe<E>()
             where E : Event
-            where H : IEventHandler<E>
         {
-            _subscriptionManager.AddSubscription<E, H>(); 
+            _subscriptionManager.AddSubscription<E>();
             _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
         }
 
@@ -111,7 +109,7 @@ namespace RealTimeCharts.Infra.Bus
             _queueExchangeManager.EnsureDeadLetterIsConfigured();
 
             _logger.LogInformation($"Creating consumer channel");
-            var consumerChannel = _busPersistentConnection.CreateChannel();
+            var consumerChannel = _eventBusPersistentConnection.CreateChannel();
             consumerChannel.BasicQos(0, 1, false);
             consumerChannel.CallbackException += (sender, ea) =>
             {
@@ -123,15 +121,16 @@ namespace RealTimeCharts.Infra.Bus
 
             _logger.LogInformation("Starting basic consume");
             var consumer = new AsyncEventingBasicConsumer(consumerChannel);
-            consumer.Received += (sender, ea) => Consumer_Received(sender, ea, consumerChannel);
+            consumer.Received += (sender, eventArgs) => Consumer_Received(eventArgs, consumerChannel);
             consumerChannel.BasicConsume(
                 queue: _rabbitMqConfig.QueueName,
                 autoAck: false,
                 consumer: consumer);
+
             _logger.LogInformation("Basic consume started");
         }
 
-        private async Task Consumer_Received(object sender, BasicDeliverEventArgs eventArgs, IModel consumerChannel)
+        private async Task Consumer_Received(BasicDeliverEventArgs eventArgs, IModel consumerChannel)
         {
             var eventName = eventArgs.RoutingKey;
             var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
@@ -139,41 +138,41 @@ namespace RealTimeCharts.Infra.Bus
             try
             {
                 _logger.LogInformation($"Processing {eventName}");
-                await ProcessEvent(eventName, message);
-                consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
-                _logger.LogInformation($"{eventName} processed and acknowledged");
+                var result = await ProcessEvent(eventName, message);
+
+                if (result.IsSuccess)
+                {
+                    consumerChannel.BasicAck(eventArgs.DeliveryTag, multiple: false);
+                    _logger.LogInformation($"{eventName} successfully processed");
+                }
+                else
+                    NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, result.Exception);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to process event {eventName}");
-                consumerChannel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
-                _logger.LogWarning($"{eventName} negative acknowledged");
+                NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, ex);
             }
         }
 
-        private async Task ProcessEvent(string eventName, string message)
+        private async Task<Result> ProcessEvent(string eventName, string message)
         {
-            if (_subscriptionManager.HasSubscriptionsForEvent(eventName))
-            {
-                using var scope = _serviceScopeFactory.CreateScope();
-                var subscriptions = _subscriptionManager.GetHandlersForEvent(eventName);
+            using var scope = _serviceScopeFactory.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                foreach (var subscription in subscriptions)
-                {
-                    var handler = scope.ServiceProvider.GetService(subscription);
-                    if (handler == null) continue;
+            _logger.LogInformation($"Deserializing {eventName}");
+            var eventType = _subscriptionManager.GetEventTypeByName(eventName);
+            var @event = JsonConvert.DeserializeObject(message, eventType);
 
-                    var eventType = _subscriptionManager.GetEventTypeByName(eventName);
+            _logger.LogInformation($"Handling event {eventName}");
+            dynamic result = await mediator.Send(@event);
+            return result;
+        }
 
-                    _logger.LogInformation($"Deserializing {eventName}");
-                    var @event = JsonConvert.DeserializeObject(message, eventType);
-
-                    var concreteType = typeof(IEventHandler<>).MakeGenericType(eventType);
-                    await (Task)concreteType.GetMethod("Handle").Invoke(handler, new object[] { @event });
-                }
-            }
-            else
-                _logger.LogWarning($"No subscription found for {eventName}");
+        private void NegativeAcknowledgeEvent(string eventName, IModel channel, BasicDeliverEventArgs eventArgs, Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to process event {eventName}");
+            channel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);
+            _logger.LogWarning($"{eventName} negative acknowledged");
         }
     }
 }

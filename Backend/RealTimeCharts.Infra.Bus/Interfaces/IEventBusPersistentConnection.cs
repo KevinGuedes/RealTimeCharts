@@ -3,9 +3,8 @@ using System;
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
-    public interface IBusPersistentConnection : IDisposable
+    public interface IEventBusPersistentConnection : IDisposable
     {
-        bool IsConnected { get; }
         void StartPersistentConnection();
         IModel CreateChannel();
     }

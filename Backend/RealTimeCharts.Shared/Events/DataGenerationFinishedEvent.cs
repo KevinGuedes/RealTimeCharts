@@ -1,6 +1,4 @@
-﻿using RealTimeCharts.Shared.Events;
-
-namespace RealTimeCharts.Microservices.ClientDispatcher.Events
+﻿namespace RealTimeCharts.Shared.Events
 {
     public class DataGenerationFinishedEvent : Event
     {

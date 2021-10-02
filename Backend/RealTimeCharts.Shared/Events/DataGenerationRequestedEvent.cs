@@ -1,11 +1,10 @@
 ﻿using RealTimeCharts.Shared.Enums;
-using RealTimeCharts.Shared.Events;
 
-namespace RealTimeCharts.Microservices.DataProvider.Events
+namespace RealTimeCharts.Shared.Events
 {
-    public class GenerateDataEvent : Event
+    public class DataGenerationRequestedEvent : Event
     {
-        public GenerateDataEvent(DataGenerationRate rate, DataType dataType, string connectionId)
+        public DataGenerationRequestedEvent(DataGenerationRate rate, DataType dataType, string connectionId)
         {
             Rate = rate;
             DataType = dataType;

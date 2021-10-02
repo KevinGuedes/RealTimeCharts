@@ -1,5 +1,4 @@
-﻿using RabbitMQ.Client;
-using RealTimeCharts.Shared.Events;
+﻿using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
