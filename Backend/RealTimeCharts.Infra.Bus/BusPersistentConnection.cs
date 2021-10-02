@@ -4,7 +4,6 @@ using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
-using RealTimeCharts.Infra.Bus.Exceptions;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using System;
 using System.IO;
@@ -31,7 +30,7 @@ namespace RealTimeCharts.Infra.Bus
             _maxRetryAttempts = maxRetryAttempts;
         }
 
-        public bool IsConnected
+        private bool IsConnected
         {
             get
             {

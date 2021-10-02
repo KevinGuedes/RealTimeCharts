@@ -63,9 +63,7 @@ namespace RealTimeCharts.Infra.Bus
 
         public void Publish(Event @event)
         {
-            _logger.LogInformation($"Creating channel to publish event");
             _queueExchangeManager.EnsureExchangeExists();
-
             if (_publishingChannel == null || !_publishingChannel.IsOpen)
                 CreatePublishingChannel();
 
@@ -128,6 +126,7 @@ namespace RealTimeCharts.Infra.Bus
                 queue: _rabbitMqConfig.QueueName,
                 autoAck: false,
                 consumer: consumer);
+
             _logger.LogInformation("Basic consume started");
         }
 

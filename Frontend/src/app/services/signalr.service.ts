@@ -11,10 +11,8 @@ export class SignalrService {
   private readonly _hubUrl: string = environment.dataHubUrl;
   private readonly _hubConnection: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl(this._hubUrl)
-    .withAutomaticReconnect([1000, 10000, 30000, 60000, 120000, 180000])
+    .withAutomaticReconnect([5000, 10000, 30000, 60000, 120000, 180000])
     .build();
-  private _isConnected: boolean = false;
-  private _connectionId!: string;
   public dataReceived: EventEmitter<DataPoint> = new EventEmitter<DataPoint>();
   public dataGenerationFinished: EventEmitter<boolean> = new EventEmitter<boolean>();
   public connectionStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -28,7 +26,6 @@ export class SignalrService {
   private configureConnection() {
     this._hubConnection.onreconnecting(_ => {
       console.error('Connection with SignalR was lost, trying to reconnect')
-      this._isConnected = false;
       this.connectionStatus.emit(false);
     })
 
@@ -40,9 +37,7 @@ export class SignalrService {
 
   private async startConnection(): Promise<void> {
     await this._hubConnection.start().then(() => {
-      this._isConnected = true;
-      if (this._hubConnection.connectionId)
-        this._connectionId = this._hubConnection.connectionId;
+      this.connectionStatus.emit(true);
     });
   }
 
@@ -65,6 +60,6 @@ export class SignalrService {
   }
 
   public GetConnectionId(): string {
-    return this._isConnected ? this._connectionId : "";
+    return this._hubConnection.connectionId ? this._hubConnection.connectionId : '';
   }
 }

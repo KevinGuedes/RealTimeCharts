@@ -1,5 +1,4 @@
 ﻿using RealTimeCharts.Shared.Events;
-using RealTimeCharts.Shared.Handlers;
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
