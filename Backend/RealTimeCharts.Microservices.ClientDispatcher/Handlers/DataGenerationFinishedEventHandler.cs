@@ -1,8 +1,7 @@
-﻿using MediatR;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OperationResult;
-using RealTimeCharts.Microservices.ClientDispatcher.Events;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
+using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
 using System.Threading;
 using System.Threading.Tasks;

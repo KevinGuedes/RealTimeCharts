@@ -2,9 +2,8 @@
 using Microsoft.Extensions.Logging;
 using OperationResult;
 using RealTimeCharts.Application.Data.Requests;
-using RealTimeCharts.Domain.Events;
 using RealTimeCharts.Infra.Bus.Interfaces;
-using RealTimeCharts.Shared.Handlers;
+using RealTimeCharts.Shared.Events;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,7 +23,7 @@ namespace RealTimeCharts.Application.Data.Handlers
         public Task<Result> Handle(GenerateDataRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Data generation started");
-            _eventBus.Publish(new GenerateDataEvent(request.Rate, request.DataType, request.ConnectionId));
+            _eventBus.Publish(new DataGenerationRequestedEvent(request.Rate, request.DataType, request.ConnectionId));
             return Result.Success();
         }
     }

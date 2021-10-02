@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealTimeCharts.Infra.Bus.Interfaces;
-using RealTimeCharts.Microservices.ClientDispatcher.Events;
-using RealTimeCharts.Microservices.ClientDispatcher.Handlers;
+using RealTimeCharts.Shared.Events;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

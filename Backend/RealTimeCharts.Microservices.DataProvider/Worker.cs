@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealTimeCharts.Infra.Bus.Interfaces;
-using RealTimeCharts.Microservices.DataProvider.Events;
-using RealTimeCharts.Microservices.DataProvider.Handlers;
+using RealTimeCharts.Shared.Events;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +26,7 @@ namespace RealTimeCharts.Microservices.DataProvider
             {
                 if (!_isListeningToEvents)
                 {
-                    _eventBus.Subscribe<GenerateDataEvent>();
+                    _eventBus.Subscribe<DataGenerationRequestedEvent>();
                     _eventBus.StartConsuming();
                     _isListeningToEvents = true;
                 }

@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RealTimeCharts.Infra.IoC;
-using RealTimeCharts.Microservices.ClientDispatcher.Handlers;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
 using RealTimeCharts.Microservices.ClientDispatcher.Services;
 using RealTimeCharts.Microservices.ClientDispatcher.Tools;
@@ -22,7 +21,6 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddRabbitMQBus(hostContext.Configuration);
-                    var sp = services.BuildServiceProvider();
                     services.AddSingleton<HubConnection>(sp => {
                         var logger = sp.GetService<ILogger<Program>>();
                         return SignalRConnectionFactory.CreateHubConnection(hostContext, logger);
