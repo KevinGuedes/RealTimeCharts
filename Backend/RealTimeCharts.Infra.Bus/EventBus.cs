@@ -55,9 +55,7 @@ namespace RealTimeCharts.Infra.Bus
         public void StartConsuming()
         {
             _logger.LogInformation($"Starting event consumption");
-            _queueExchangeManager.EnsureExchangeExists();
-            _queueExchangeManager.EnsureQueueExists();
-            //_queueExchangeManager.EnsureDeadLetterIsConfigured();
+            _queueExchangeManager.EnsureEnvironmentIsReadForConsuming();
 
             _logger.LogInformation($"Creating consumer channel");
             var consumerChannel = _eventBusPersistentConnection.CreateChannel();

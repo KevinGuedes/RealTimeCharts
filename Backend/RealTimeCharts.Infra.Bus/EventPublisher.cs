@@ -71,7 +71,7 @@ namespace RealTimeCharts.Infra.Bus
                 properties.Expiration = (Math.Pow(2, @event.RetryCount) * 1000).ToString();
 
                 _publishingChannel.BasicPublish(
-                    exchange: _rabbitMqConfig.DeadLetterExchange,
+                    exchange: _rabbitMqConfig.DeadLetterExchangeName,
                     routingKey: eventName,
                     basicProperties: properties,
                     body: body);

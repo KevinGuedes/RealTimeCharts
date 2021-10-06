@@ -24,7 +24,6 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
             _dataGenerator = dataGenerator;
         }
 
-
         public Task<Result> Handle(DataGenerationRequestedEvent @event, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"{@event.DataType} data generation started");
@@ -38,7 +37,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
                 {
                     _logger.LogError($"Failed to generate Data: Invalid data generated");
                     _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, false));
-                    return Result.Error(new InvalidDataGeneratedException("Invalid data generated"));
+                    return Result.Success();
                 }
 
                 _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
