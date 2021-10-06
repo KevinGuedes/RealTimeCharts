@@ -104,7 +104,7 @@ namespace RealTimeCharts.Infra.Bus
                 else
                 {
                     if (@event.ShouldBeDiscarded)
-                        NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, result.Exception);
+                        NackEvent(eventName, consumerChannel, eventArgs, result.Exception);
                     else
                     {
                         _eventPublisher.PublishDelayedEvent(@event);
@@ -114,7 +114,7 @@ namespace RealTimeCharts.Infra.Bus
             }
             catch (Exception ex)
             {
-                NegativeAcknowledgeEvent(eventName, consumerChannel, eventArgs, ex);
+                NackEvent(eventName, consumerChannel, eventArgs, ex);
             }
         }
 
@@ -136,7 +136,7 @@ namespace RealTimeCharts.Infra.Bus
             }
         }
 
-        private void NegativeAcknowledgeEvent(string eventName, IModel channel, BasicDeliverEventArgs eventArgs, Exception ex)
+        private void NackEvent(string eventName, IModel channel, BasicDeliverEventArgs eventArgs, Exception ex)
         {
             _logger.LogError(ex, $"Failed to process event {eventName}");
             channel.BasicNack(eventArgs.DeliveryTag, multiple: false, requeue: false);

@@ -123,7 +123,6 @@ namespace RealTimeCharts.Infra.Bus
                                arguments: new Dictionary<string, object>
                                     {
                                         {"x-dead-letter-exchange", _rabbitMqConfig.ExchangeName},
-                                        { "x-queue-mode", "lazy" }
                                     }
                                 );
             channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, eventName);
