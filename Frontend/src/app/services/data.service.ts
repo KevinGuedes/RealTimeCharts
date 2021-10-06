@@ -23,10 +23,10 @@ export class DataService {
 
   public generateData(rate: DataGenerationRate, dataTypeName: string): Promise<void> {
     const dataType = this.getDataTypeByDataTypeName(DataTypeName[dataTypeName as keyof typeof DataTypeName]);
-    const request = new GenerateDataRequest(rate, dataType, this._signalrService.GetConnectionId())
+    const request = new GenerateDataRequest(rate, dataType, this._signalrService.getConnectionId())
 
     return this._http.post<GenerateDataRequest>(this._apiUrl, request).pipe(
-      map(response => response),
+      map(response => response), //? why this?
       catchError(error => this.errorHandler(error))
     ).toPromise();
   }

@@ -59,7 +59,7 @@ export class SignalrService {
     })
   }
 
-  public GetConnectionId(): string {
+  public getConnectionId(): string {
     return this._hubConnection.connectionId ? this._hubConnection.connectionId : '';
   }
 }
