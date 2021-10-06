@@ -85,14 +85,14 @@ namespace RealTimeCharts.Infra.Bus
         {
             _logger.LogInformation("Starting process received event");
             var eventName = eventArgs.RoutingKey;
-            var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
-
-            _logger.LogInformation($"Deserializing {eventName}");
-            var eventType = _subscriptionManager.GetEventTypeByName(eventName);
-            var @event = (Event)JsonConvert.DeserializeObject(message, eventType);
 
             try
             {
+                _logger.LogInformation($"Deserializing {eventName}");
+                var message = Encoding.UTF8.GetString(eventArgs.Body.ToArray());
+                var eventType = _subscriptionManager.GetEventTypeByName(eventName);
+                var @event = (Event)JsonConvert.DeserializeObject(message, eventType);
+
                 _logger.LogInformation($"Processing {eventName}");
                 var result = await ProcessEvent(eventName, @event);
 
@@ -120,12 +120,20 @@ namespace RealTimeCharts.Infra.Bus
 
         private async Task<Result> ProcessEvent(string eventName, Event @event)
         {
-            using var scope = _serviceScopeFactory.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+            try
+            {
+                using var scope = _serviceScopeFactory.CreateScope();
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            _logger.LogInformation($"Handling event {eventName}");
-            dynamic result = await mediator.Send(@event);
-            return result;
+                _logger.LogInformation($"Handling event {eventName}");
+                dynamic result = await mediator.Send(@event);
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                return Result.Error(ex);
+            }
         }
 
         private void NegativeAcknowledgeEvent(string eventName, IModel channel, BasicDeliverEventArgs eventArgs, Exception ex)

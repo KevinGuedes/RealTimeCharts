@@ -27,35 +27,29 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
 
         public Task<Result> Handle(DataGenerationRequestedEvent @event, CancellationToken cancellationToken)
         {
+            _logger.LogInformation($"{@event.DataType} data generation started");
+            var optimalSetup = _dataGenerator.GetOptimalSetupFor(@event.DataType);
 
-            try
+            for (double i = optimalSetup.Min; i <= optimalSetup.Max; i += optimalSetup.Step)
             {
-                throw new InvalidDataGeneratedException("Invalid data generated");
-                //_logger.LogInformation($"{@event.DataType} data generation started");
-                //var optimalSetup = _dataGenerator.GetOptimalSetupFor(@event.DataType);
+                var dataPoint = _dataGenerator.GenerateData(i, @event.DataType);
 
-                //for (double i = optimalSetup.Min; i <= optimalSetup.Max; i += optimalSetup.Step)
-                //{
-                //    var dataPoint = _dataGenerator.GenerateData(i, @event.DataType);
-                //    if (!dataPoint.IsValid)
-                //        throw new InvalidDataGeneratedException("Invalid data generated");
+                if (!dataPoint.IsValid)
+                {
+                    _logger.LogError($"Failed to generate Data: Invalid data generated");
+                    _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, false));
+                    return Result.Error(new InvalidDataGeneratedException("Invalid data generated"));
+                }
 
-                //    _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
-                //    _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));
+                _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
+                _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));
 
-                //    Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));
-                //}
-
-                //_logger.LogInformation($"{@event.DataType} data successfully generated");
-                //_eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, true));
-                //return Result.Success();
+                Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to generate Data: Invalid data generated");
-                _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, false));
-                return Result.Error(ex);
-            }
+
+            _logger.LogInformation($"{@event.DataType} data successfully generated");
+            _eventBus.Publish(new DataGenerationFinishedEvent(@event.ConnectionId, true));
+            return Result.Success();
         }
     }
 }
