@@ -23,8 +23,8 @@ namespace RealTimeCharts.Infra.Bus
             IEventBusPersistentConnection busPersistentConnection)
         {
             _logger = logger;
-            _eventBusPersistentConnection = busPersistentConnection;
             _rabbitMqConfig = rabbitMqConfig.Value;
+            _eventBusPersistentConnection = busPersistentConnection;
             _isExchangeCreated = false;
             _isQueueCreated = false;
             _isDeadLetterConfigured = false;
@@ -48,14 +48,14 @@ namespace RealTimeCharts.Infra.Bus
             }
         }
 
-        public void EnsureDeadLetterIsConfigured()
-        {
-            if (!_isDeadLetterConfigured)
-            {
-                using var channel = _eventBusPersistentConnection.CreateChannel();
-                ConfigureDeadLetter(channel);
-            }
-        }
+        //public void EnsureDeadLetterIsConfiguredFor(Event @event)
+        //{
+        //    if (!_isDeadLetterConfigured)
+        //    {
+        //        using var channel = _eventBusPersistentConnection.CreateChannel();
+        //        ConfigureDeadLetter(@event.GetType().Name, channel);
+        //    }
+        //}
 
         public void ConfigureSubscriptionForEvent<E>() where E : Event
         {
@@ -67,7 +67,7 @@ namespace RealTimeCharts.Infra.Bus
             CreateExchange(channel);
             CreateQueue(channel);
             BindQueueToExchangeForEvent(eventName, channel);
-            ConfigureDeadLetter(channel);
+            ConfigureDeadLetter(eventName, channel);
 
             _logger.LogInformation($"Subscription for {eventName} configured");
         }
@@ -93,7 +93,6 @@ namespace RealTimeCharts.Infra.Bus
                                 arguments: new Dictionary<string, object>
                                     {
                                         {"x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchange},
-                                        {"x-dead-letter-routing-key", $"{_rabbitMqConfig.QueueName}-error"},
                                     }
                                 );
             _isQueueCreated = true;
@@ -112,7 +111,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Queue bound to exchange");
         }
 
-        private void ConfigureDeadLetter(IModel channel)
+        private void ConfigureDeadLetter(string eventName, IModel channel)
         {
             _logger.LogInformation("Configuring dead letter flow");
 
@@ -123,10 +122,11 @@ namespace RealTimeCharts.Infra.Bus
                                autoDelete: false,
                                arguments: new Dictionary<string, object>
                                     {
+                                        {"x-dead-letter-exchange", _rabbitMqConfig.ExchangeName},
                                         { "x-queue-mode", "lazy" }
                                     }
                                 );
-            channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, $"{_rabbitMqConfig.QueueName}-error");
+            channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, eventName);
             _isDeadLetterConfigured = true;
 
             _logger.LogInformation("Dead letter flow configured");

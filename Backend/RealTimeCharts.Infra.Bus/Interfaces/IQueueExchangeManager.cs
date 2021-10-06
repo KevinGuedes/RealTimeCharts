@@ -6,7 +6,7 @@ namespace RealTimeCharts.Infra.Bus.Interfaces
     {
         void EnsureExchangeExists();
         void EnsureQueueExists();
-        void EnsureDeadLetterIsConfigured();
+        //void EnsureDeadLetterIsConfigured();
         void ConfigureSubscriptionForEvent<E>() where E : Event;
     }
 }
