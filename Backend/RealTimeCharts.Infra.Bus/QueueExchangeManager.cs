@@ -44,7 +44,7 @@ namespace RealTimeCharts.Infra.Bus
             if (!_isDelayedExchangeCreated)
             {
                 using var channel = _eventBusPersistentConnection.CreateChannel();
-                CreateDelayedExchange(channel, _rabbitMqConfig.DelayedExchangeName);
+                CreateDelayedExchange(channel);
             }
         }
 
@@ -79,7 +79,7 @@ namespace RealTimeCharts.Infra.Bus
             CreateDeadLetterQueue(channel);
             BindQueueToExchangeForEvent(channel, _rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchangeName, eventName);
 
-            CreateDelayedExchange(channel, _rabbitMqConfig.DelayedExchangeName);
+            CreateDelayedExchange(channel);
             BindQueueToExchangeForEvent(channel, _rabbitMqConfig.QueueName, _rabbitMqConfig.DelayedExchangeName, eventName);
 
             _isEnvironmentReadyForConsuming = true;
@@ -97,16 +97,15 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Exchange created");
         }
 
-        private void CreateDelayedExchange(IModel channel, string exchangeName)
+        private void CreateDelayedExchange(IModel channel)
         {
             _logger.LogInformation("Creating exchange to publish events");
-            var arguments = new Dictionary<string, object> { { "x-delayed-type", "direct" } };
             channel.ExchangeDeclare(
                 exchange: _rabbitMqConfig.DelayedExchangeName,
                 type: "x-delayed-message",
                 durable: true,
                 autoDelete: false,
-                arguments: arguments);
+                arguments: new Dictionary<string, object> { { "x-delayed-type", "direct" } });
             _isDelayedExchangeCreated = true;
             _logger.LogInformation("Exchange created");
         }
@@ -119,9 +118,7 @@ namespace RealTimeCharts.Infra.Bus
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: new Dictionary<string, object> { 
-                    { "x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchangeName } 
-                });
+                arguments: new Dictionary<string, object> { { "x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchangeName } });
             _logger.LogInformation("Queue created");
         }
 
@@ -133,9 +130,7 @@ namespace RealTimeCharts.Infra.Bus
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: new Dictionary<string, object> {
-                    { "x-queue-mode", "lazy" }
-                });
+                arguments: new Dictionary<string, object> { { "x-queue-mode", "lazy" } });
             _logger.LogInformation("Queue created");
         }
 
