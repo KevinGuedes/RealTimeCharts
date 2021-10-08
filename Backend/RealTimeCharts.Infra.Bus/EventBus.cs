@@ -48,14 +48,14 @@ namespace RealTimeCharts.Infra.Bus
 
         public void SubscribeTo<E>() where E : Event
         {
+            _queueExchangeManager.EnsureMessagingEnvironmentExists();
             _subscriptionManager.AddSubscription<E>();
-            _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
         }
 
         public void StartConsuming()
         {
             _logger.LogInformation($"Starting event consumption");
-            _queueExchangeManager.EnsureEnvironmentIsReadForConsuming();
+            _queueExchangeManager.EnsureMessagingEnvironmentExists();
 
             _logger.LogInformation($"Creating consumer channel");
             var consumerChannel = _eventBusPersistentConnection.CreateChannel();

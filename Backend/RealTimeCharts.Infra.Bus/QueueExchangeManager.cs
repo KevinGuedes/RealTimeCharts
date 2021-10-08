@@ -15,7 +15,7 @@ namespace RealTimeCharts.Infra.Bus
         private readonly IEventBusPersistentConnection _eventBusPersistentConnection;
         private bool _isMainExchangeCreated;
         private bool _isDelayedExchangeCreated;
-        private bool _isEnvironmentReadyForConsuming;
+        private bool _isMessagingEnvironmentBuilt;
 
         public QueueExchangeManager(
             ILogger<QueueExchangeManager> logger,
@@ -27,7 +27,7 @@ namespace RealTimeCharts.Infra.Bus
             _eventBusPersistentConnection = busPersistentConnection;
             _isMainExchangeCreated = false;
             _isDelayedExchangeCreated = false;
-            _isEnvironmentReadyForConsuming = false;
+            _isMessagingEnvironmentBuilt = false;
         }
 
         public void EnsureExchangeExists()
@@ -48,42 +48,40 @@ namespace RealTimeCharts.Infra.Bus
             }
         }
 
-        public void EnsureEnvironmentIsReadForConsuming()
+        public void EnsureMessagingEnvironmentExists()
         {
-            if (!_isEnvironmentReadyForConsuming)
-            {
-                using var channel = _eventBusPersistentConnection.CreateChannel();
-
-                CreateExchange(channel, _rabbitMqConfig.ExchangeName);
-                CreateCommonQueue(channel);
-
-                CreateExchange(channel, _rabbitMqConfig.DeadLetterExchangeName);
-                CreateDeadLetterQueue(channel);
-            }
+            if (!_isMessagingEnvironmentBuilt)
+                BuildMessagingEnvironment();
         }
 
-        public void ConfigureSubscriptionForEvent<E>() where E : Event
+        public void BindQueueToExchangeFor<E>(IModel channel, string queueName, string exchangeName) where E : Event
         {
             string eventName = typeof(E).Name;
 
-            _logger.LogInformation($"Configuring subscription for {eventName}");
+            _logger.LogInformation($"Binding queue to receive {eventName}");
+            channel.QueueBind(queue: queueName,
+                              exchange: exchangeName,
+                              routingKey: eventName);
+            _logger.LogInformation($"Queue bound to exchange for {eventName}");
+        }
+
+        private void BuildMessagingEnvironment()
+        {
+            _logger.LogInformation("Building messaging environment");
 
             using var channel = _eventBusPersistentConnection.CreateChannel();
 
             CreateExchange(channel, _rabbitMqConfig.ExchangeName);
             _isMainExchangeCreated = true;
-            CreateCommonQueue(channel);
-            BindQueueToExchangeForEvent(channel, _rabbitMqConfig.QueueName, _rabbitMqConfig.ExchangeName, eventName);
+            CreateQueue(channel);
 
             CreateExchange(channel, _rabbitMqConfig.DeadLetterExchangeName);
             CreateDeadLetterQueue(channel);
-            BindQueueToExchangeForEvent(channel, _rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchangeName, eventName);
 
             CreateDelayedExchange(channel);
-            BindQueueToExchangeForEvent(channel, _rabbitMqConfig.QueueName, _rabbitMqConfig.DelayedExchangeName, eventName);
 
-            _isEnvironmentReadyForConsuming = true;
-            _logger.LogInformation($"Subscription for {eventName} configured");
+            _isMessagingEnvironmentBuilt = true;
+            _logger.LogInformation($"Messaging environment built");
         }
 
         private void CreateExchange(IModel channel, string exchangeName)
@@ -110,7 +108,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Exchange created");
         }
 
-        private void CreateCommonQueue(IModel channel)
+        private void CreateQueue(IModel channel)
         {
             _logger.LogInformation("Creating queue");
             channel.QueueDeclare(
@@ -132,15 +130,6 @@ namespace RealTimeCharts.Infra.Bus
                 autoDelete: false,
                 arguments: new Dictionary<string, object> { { "x-queue-mode", "lazy" } });
             _logger.LogInformation("Queue created");
-        }
-
-        private void BindQueueToExchangeForEvent(IModel channel, string queueName, string exchangeName, string eventName)
-        {
-            _logger.LogInformation($"Binding queue to receive {eventName}");
-            channel.QueueBind(queue: queueName,
-                              exchange: exchangeName,
-                              routingKey: eventName);
-            _logger.LogInformation($"Queue bound to exchange for {eventName}");
         }
     }
 }
