@@ -97,7 +97,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogInformation("Exchange created");
         }
 
-        private void CreateDelayedExchange(IModel channel, string exchangeName)
+        private void CreateDelayedExchange(IModel channel)
         {
             _logger.LogInformation("Creating exchange to publish events");
             var arguments = new Dictionary<string, object> { { "x-delayed-type", "direct" } };
