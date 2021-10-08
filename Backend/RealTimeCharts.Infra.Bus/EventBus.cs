@@ -101,7 +101,7 @@ namespace RealTimeCharts.Infra.Bus
                 }
                 else
                 {
-                    if (@event.ShouldBeDiscarded)
+                    if (@event.ShouldBeNacked)
                         NackEvent(eventName, consumerChannel, eventArgs, result.Exception);
                     else
                     {

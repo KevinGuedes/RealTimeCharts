@@ -16,10 +16,11 @@ namespace RealTimeCharts.Infra.IoC
 {
     public static class DependencyContainer
     {
-        public static void AddRabbitMQBus(this IServiceCollection services, IConfiguration configuration)
+        public static void AddEventBus(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddMediatR(Assembly.GetCallingAssembly());
             services.Configure<RabbitMQConfigurations>(configuration.GetSection(nameof(RabbitMQConfigurations)));
+
             services.AddSingleton<ISubscriptionManager, SubscriptionManager>();
             services.AddSingleton<IQueueExchangeManager, QueueExchangeManager>();
             services.AddSingleton<IQueueExchangeManager, QueueExchangeManager>();

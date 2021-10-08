@@ -9,6 +9,7 @@ using RealTimeCharts.Infra.Bus.Configurations;
 using RealTimeCharts.Infra.Bus.Interfaces;
 using RealTimeCharts.Shared.Events;
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 
@@ -40,6 +41,7 @@ namespace RealTimeCharts.Infra.Bus
         public void Publish(Event @event)
         {
             string eventName = @event.GetType().Name;
+            _queueExchangeManager.EnsureExchangeExists();
             var (message, body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
 
             _logger.LogInformation($"Publishing {eventName} with Id: {@event.Id}");
@@ -61,6 +63,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             @event.RetryCount++;
             string eventName = @event.GetType().Name;
+            _queueExchangeManager.EnsureDelayedExchangeExists();
             var (message, body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
 
             _logger.LogWarning($"Publishing {eventName} with Id: {@event.Id} as delayed event");
@@ -68,10 +71,10 @@ namespace RealTimeCharts.Infra.Bus
             {
                 var properties = _publishingChannel.CreateBasicProperties();
                 properties.DeliveryMode = 2;
-                properties.Expiration = (Math.Pow(2, @event.RetryCount) * 1000).ToString();
+                properties.Headers = new Dictionary<string, object> { { "x-delay", Convert.ToInt32(Math.Pow(2, @event.RetryCount) * 1000) } };
 
                 _publishingChannel.BasicPublish(
-                    exchange: _rabbitMqConfig.DeadLetterExchangeName,
+                    exchange: _rabbitMqConfig.DelayedExchangeName,
                     routingKey: eventName,
                     basicProperties: properties,
                     body: body);
@@ -81,7 +84,6 @@ namespace RealTimeCharts.Infra.Bus
 
         private (string, byte[], RetryPolicy) PrepareToPublishEvent(Event @event, string eventName)
         {
-            _queueExchangeManager.EnsureExchangeExists();
             if (_publishingChannel == null || !_publishingChannel.IsOpen)
                 CreatePublishingChannel();
 

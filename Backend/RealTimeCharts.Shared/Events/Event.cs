@@ -8,7 +8,7 @@ namespace RealTimeCharts.Shared.Events
     {
         public Guid Id { get; private set; }
         public DateTime CreationDate { get; private set; }
-        public bool ShouldBeDiscarded { get => RetryCount > 5; }
+        public bool ShouldBeNacked { get => RetryCount > 5; }
         public int RetryCount { get; set; }
 
         protected Event()
