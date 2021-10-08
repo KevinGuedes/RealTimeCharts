@@ -46,7 +46,7 @@ namespace RealTimeCharts.Infra.Bus
         public void Publish(Event @event)
             => _eventPublisher.Publish(@event);
 
-        public void Subscribe<E>() where E : Event
+        public void SubscribeTo<E>() where E : Event
         {
             _subscriptionManager.AddSubscription<E>();
             _queueExchangeManager.ConfigureSubscriptionForEvent<E>();
