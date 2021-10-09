@@ -42,7 +42,7 @@ namespace RealTimeCharts.Infra.Bus
         {
             string eventName = @event.GetType().Name;
             _queueExchangeManager.EnsureExchangeExists();
-            var (message, body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
+            var (body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
 
             _logger.LogInformation($"Publishing {eventName} with Id: {@event.Id}");
             publishPolicy.Execute(() =>
@@ -64,7 +64,7 @@ namespace RealTimeCharts.Infra.Bus
             @event.RetryCount++;
             string eventName = @event.GetType().Name;
             _queueExchangeManager.EnsureDelayedExchangeExists();
-            var (message, body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
+            var (body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
 
             _logger.LogWarning($"Publishing {eventName} with Id: {@event.Id} as delayed event");
             publishPolicy.Execute(() =>
@@ -82,7 +82,7 @@ namespace RealTimeCharts.Infra.Bus
             _logger.LogWarning($"{eventName} with Id: {@event.Id} published as delayed event");
         }
 
-        private (string, byte[], RetryPolicy) PrepareToPublishEvent(Event @event, string eventName)
+        private (byte[], RetryPolicy) PrepareToPublishEvent(Event @event, string eventName)
         {
             if (_publishingChannel == null || !_publishingChannel.IsOpen)
                 CreatePublishingChannel();
@@ -99,7 +99,7 @@ namespace RealTimeCharts.Infra.Bus
                 _logger.LogWarning(ex, $"Failed to publish {eventName} with Id {@event.Id} after {time.TotalSeconds:n1}s: ({ex.Message})");
             });
 
-            return (message, body, publishPolicy);
+            return (body, publishPolicy);
         }
 
         private void CreatePublishingChannel()
