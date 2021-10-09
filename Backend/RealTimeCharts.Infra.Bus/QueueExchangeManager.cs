@@ -72,21 +72,22 @@ namespace RealTimeCharts.Infra.Bus
             using var channel = _eventBusPersistentConnection.CreateChannel();
 
             CreateExchange(channel, _rabbitMqConfig.ExchangeName);
-            _isMainExchangeCreated = true;
-            CreateQueue(channel);
-
             CreateExchange(channel, _rabbitMqConfig.DeadLetterExchangeName);
+            CreateDelayedExchange(channel);
+            _isMainExchangeCreated = true;
+            _isDelayedExchangeCreated = true;
+
+            CreateQueue(channel);
             CreateDeadLetterQueue(channel);
 
-            CreateDelayedExchange(channel);
-
             _isMessagingEnvironmentBuilt = true;
+
             _logger.LogInformation($"Messaging environment built");
         }
 
         private void CreateExchange(IModel channel, string exchangeName)
         {
-            _logger.LogInformation("Creating exchange to publish events");
+            _logger.LogInformation("Creating exchange");
             channel.ExchangeDeclare(
                 exchange: exchangeName, 
                 type: "direct",
@@ -97,15 +98,14 @@ namespace RealTimeCharts.Infra.Bus
 
         private void CreateDelayedExchange(IModel channel)
         {
-            _logger.LogInformation("Creating exchange to publish events");
+            _logger.LogInformation("Creating delayed exchange");
             channel.ExchangeDeclare(
                 exchange: _rabbitMqConfig.DelayedExchangeName,
                 type: "x-delayed-message",
                 durable: true,
                 autoDelete: false,
                 arguments: new Dictionary<string, object> { { "x-delayed-type", "direct" } });
-            _isDelayedExchangeCreated = true;
-            _logger.LogInformation("Exchange created");
+            _logger.LogInformation("Delayed exchange created");
         }
 
         private void CreateQueue(IModel channel)
@@ -122,14 +122,14 @@ namespace RealTimeCharts.Infra.Bus
 
         private void CreateDeadLetterQueue(IModel channel)
         {
-            _logger.LogInformation("Creating queue");
+            _logger.LogInformation("Creating dead letter queue");
             channel.QueueDeclare(
                 queue: _rabbitMqConfig.DeadLetterQueueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: new Dictionary<string, object> { { "x-queue-mode", "lazy" } });
-            _logger.LogInformation("Queue created");
+            _logger.LogInformation("Dead letter queue created");
         }
     }
 }
