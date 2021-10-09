@@ -61,10 +61,11 @@ namespace RealTimeCharts.Infra.Bus
 
         public void PublishDelayedEvent(Event @event)
         {
-            @event.RetryCount++;
             string eventName = @event.GetType().Name;
             _queueExchangeManager.EnsureDelayedExchangeExists();
             var (body, publishPolicy) = PrepareToPublishEvent(@event, eventName);
+            
+            @event.RetryCount++;
 
             _logger.LogWarning($"Publishing {eventName} with Id: {@event.Id} as delayed event");
             publishPolicy.Execute(() =>
