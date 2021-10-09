@@ -2,10 +2,9 @@
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
-    public interface IEventBus
+    public interface IEventPublisher
     {
         void Publish(Event @event);
-        void SubscribeTo<E>() where E : Event;
-        void StartConsuming();
+        void PublishDelayedEvent(Event @event);
     }
 }

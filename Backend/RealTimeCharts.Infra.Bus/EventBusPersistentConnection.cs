@@ -30,13 +30,7 @@ namespace RealTimeCharts.Infra.Bus
             _maxRetryAttempts = maxRetryAttempts;
         }
 
-        private bool IsConnected
-        {
-            get
-            {
-                return _connection != null && _connection.IsOpen && !_disposed;
-            }
-        }
+        private bool IsConnected { get => _connection != null && _connection.IsOpen && !_disposed; }
 
         public void Dispose()
         {

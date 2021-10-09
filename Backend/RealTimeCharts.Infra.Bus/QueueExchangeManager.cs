@@ -13,9 +13,9 @@ namespace RealTimeCharts.Infra.Bus
         private readonly ILogger<QueueExchangeManager> _logger;
         private readonly RabbitMQConfigurations _rabbitMqConfig;
         private readonly IEventBusPersistentConnection _eventBusPersistentConnection;
-        private bool _isExchangeCreated;
-        private bool _isQueueCreated;
-        private bool _isDeadLetterConfigured;
+        private bool _isMainExchangeCreated;
+        private bool _isDelayedExchangeCreated;
+        private bool _isMessagingEnvironmentBuilt;
 
         public QueueExchangeManager(
             ILogger<QueueExchangeManager> logger,
@@ -23,113 +23,113 @@ namespace RealTimeCharts.Infra.Bus
             IEventBusPersistentConnection busPersistentConnection)
         {
             _logger = logger;
-            _eventBusPersistentConnection = busPersistentConnection;
             _rabbitMqConfig = rabbitMqConfig.Value;
-            _isExchangeCreated = false;
-            _isQueueCreated = false;
-            _isDeadLetterConfigured = false;
+            _eventBusPersistentConnection = busPersistentConnection;
+            _isMainExchangeCreated = false;
+            _isDelayedExchangeCreated = false;
+            _isMessagingEnvironmentBuilt = false;
         }
 
         public void EnsureExchangeExists()
         {
-            if (!_isExchangeCreated)
+            if (!_isMainExchangeCreated)
             {
                 using var channel = _eventBusPersistentConnection.CreateChannel();
-                CreateExchange(channel);
+                CreateExchange(channel, _rabbitMqConfig.ExchangeName);
             }
         }
 
-        public void EnsureQueueExists()
+        public void EnsureDelayedExchangeExists()
         {
-            if (!_isQueueCreated)
+            if (!_isDelayedExchangeCreated)
             {
                 using var channel = _eventBusPersistentConnection.CreateChannel();
-                CreateQueue(channel);
+                CreateDelayedExchange(channel);
             }
         }
 
-        public void EnsureDeadLetterIsConfigured()
+        public void EnsureMessagingEnvironmentExists()
         {
-            if (!_isDeadLetterConfigured)
-            {
-                using var channel = _eventBusPersistentConnection.CreateChannel();
-                ConfigureDeadLetter(channel);
-            }
+            if (!_isMessagingEnvironmentBuilt)
+                BuildMessagingEnvironment();
         }
 
-        public void ConfigureSubscriptionForEvent<E>() where E : Event
+        public void BindQueueToExchangeFor<E>(IModel channel, string queueName, string exchangeName) where E : Event
         {
             string eventName = typeof(E).Name;
 
-            _logger.LogInformation($"Configuring subscription for {eventName}");
-
-            using var channel = _eventBusPersistentConnection.CreateChannel();
-            CreateExchange(channel);
-            CreateQueue(channel);
-            BindQueueToExchangeForEvent(eventName, channel);
-            ConfigureDeadLetter(channel);
-
-            _logger.LogInformation($"Subscription for {eventName} configured");
+            _logger.LogInformation($"Binding queue to receive {eventName}");
+            channel.QueueBind(queue: queueName,
+                              exchange: exchangeName,
+                              routingKey: eventName);
+            _logger.LogInformation($"Queue bound to exchange for {eventName}");
         }
 
-        private void CreateExchange(IModel channel)
+        private void BuildMessagingEnvironment()
         {
-            _logger.LogInformation("Creating exchange to publish events");
+            _logger.LogInformation("Building messaging environment");
 
-            channel.ExchangeDeclare(exchange: _rabbitMqConfig.ExchangeName, type: "direct");
-            _isExchangeCreated = true;
+            using var channel = _eventBusPersistentConnection.CreateChannel();
 
+            CreateExchange(channel, _rabbitMqConfig.ExchangeName);
+            CreateExchange(channel, _rabbitMqConfig.DeadLetterExchangeName);
+            CreateDelayedExchange(channel);
+            _isMainExchangeCreated = true;
+            _isDelayedExchangeCreated = true;
+
+            CreateQueue(channel);
+            CreateDeadLetterQueue(channel);
+
+            _isMessagingEnvironmentBuilt = true;
+
+            _logger.LogInformation($"Messaging environment built");
+        }
+
+        private void CreateExchange(IModel channel, string exchangeName)
+        {
+            _logger.LogInformation("Creating exchange");
+            channel.ExchangeDeclare(
+                exchange: exchangeName, 
+                type: "direct",
+                durable: true,
+                autoDelete: false);
             _logger.LogInformation("Exchange created");
+        }
+
+        private void CreateDelayedExchange(IModel channel)
+        {
+            _logger.LogInformation("Creating delayed exchange");
+            channel.ExchangeDeclare(
+                exchange: _rabbitMqConfig.DelayedExchangeName,
+                type: "x-delayed-message",
+                durable: true,
+                autoDelete: false,
+                arguments: new Dictionary<string, object> { { "x-delayed-type", "direct" } });
+            _logger.LogInformation("Delayed exchange created");
         }
 
         private void CreateQueue(IModel channel)
         {
             _logger.LogInformation("Creating queue");
-
-            channel.QueueDeclare(queue: _rabbitMqConfig.QueueName,
-                                durable: true,
-                                exclusive: false,
-                                autoDelete: false,
-                                arguments: new Dictionary<string, object>
-                                    {
-                                        {"x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchange},
-                                        {"x-dead-letter-routing-key", $"{_rabbitMqConfig.QueueName}-error"},
-                                    }
-                                );
-            _isQueueCreated = true;
-
+            channel.QueueDeclare(
+                queue: _rabbitMqConfig.QueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: new Dictionary<string, object> { { "x-dead-letter-exchange", _rabbitMqConfig.DeadLetterExchangeName } });
             _logger.LogInformation("Queue created");
         }
 
-        private void BindQueueToExchangeForEvent(string eventName, IModel channel)
+        private void CreateDeadLetterQueue(IModel channel)
         {
-            _logger.LogInformation($"Binding queue to receive {eventName}");
-
-            channel.QueueBind(queue: _rabbitMqConfig.QueueName,
-                              exchange: _rabbitMqConfig.ExchangeName,
-                              routingKey: eventName);
-
-            _logger.LogInformation("Queue bound to exchange");
-        }
-
-        private void ConfigureDeadLetter(IModel channel)
-        {
-            _logger.LogInformation("Configuring dead letter flow");
-
-            channel.ExchangeDeclare(exchange: _rabbitMqConfig.DeadLetterExchange, type: "direct");
-            channel.QueueDeclare(queue: _rabbitMqConfig.DeadLetterQueueName,
-                               durable: true,
-                               exclusive: false,
-                               autoDelete: false,
-                               arguments: new Dictionary<string, object>
-                                    {
-                                        { "x-queue-mode", "lazy" }
-                                    }
-                                );
-            channel.QueueBind(_rabbitMqConfig.DeadLetterQueueName, _rabbitMqConfig.DeadLetterExchange, $"{_rabbitMqConfig.QueueName}-error");
-            _isDeadLetterConfigured = true;
-
-            _logger.LogInformation("Dead letter flow configured");
+            _logger.LogInformation("Creating dead letter queue");
+            channel.QueueDeclare(
+                queue: _rabbitMqConfig.DeadLetterQueueName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: new Dictionary<string, object> { { "x-queue-mode", "lazy" } });
+            _logger.LogInformation("Dead letter queue created");
         }
     }
 }

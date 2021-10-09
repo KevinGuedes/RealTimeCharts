@@ -19,7 +19,7 @@ namespace RealTimeCharts.Presentation.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRabbitMQBus(Configuration);
+            services.AddEventBus(Configuration);
             services.ConfigureMediatR();
             
             services.ConfigureValidators();

@@ -1,12 +1,13 @@
-﻿using RealTimeCharts.Shared.Events;
+﻿using RabbitMQ.Client;
+using RealTimeCharts.Shared.Events;
 
 namespace RealTimeCharts.Infra.Bus.Interfaces
 {
     public interface IQueueExchangeManager
     {
         void EnsureExchangeExists();
-        void EnsureQueueExists();
-        void EnsureDeadLetterIsConfigured();
-        void ConfigureSubscriptionForEvent<E>() where E : Event;
+        void EnsureDelayedExchangeExists();
+        void EnsureMessagingEnvironmentExists();
+        void BindQueueToExchangeFor<E>(IModel channel, string queueName, string exchangeName) where E : Event;
     }
 }

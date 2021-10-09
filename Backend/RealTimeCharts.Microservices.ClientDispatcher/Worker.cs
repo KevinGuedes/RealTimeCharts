@@ -26,8 +26,9 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
             {
                 if (!_isListeningToEvents)
                 {
-                    _eventBus.Subscribe<DataGeneratedEvent>();
-                    _eventBus.Subscribe<DataGenerationFinishedEvent>();
+                    _eventBus.SubscribeTo<DataGeneratedEvent>();
+                    _eventBus.SubscribeTo<DataGenerationFinishedEvent>();
+
                     _eventBus.StartConsuming();
                     _isListeningToEvents = true;
                 }
