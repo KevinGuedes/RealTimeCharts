@@ -20,6 +20,5 @@ namespace RealTimeCharts.Application.Data.Validators
             RuleFor(request => request.ConnectionId)
                 .NotEmpty().WithMessage("Connection Id with SignalR must not be null or empty");
         }
-
     }
 }
