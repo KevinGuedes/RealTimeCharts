@@ -14,12 +14,22 @@ namespace RealTimeCharts.Application.Test.Validators
         public GenerateDataRequestValidatorTest()
             => _sut = new GenerateDataRequestValidator();
 
+        [Fact]
+        public void ShouldNotReturnError_WhenRequestIsValid()
+        {
+            var request = new GenerateDataRequest(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123");
+
+            var result = _sut.TestValidate(request);
+
+            result.ShouldNotHaveAnyValidationErrors();
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         public void ShouldReturError_WhenNotificationIdIsNullOrEmpty(string connectionId)
         {
-            var request = new Mock<GenerateDataRequest>().SetupAllProperties().Object;
+            var request = new GenerateDataRequest(DataGenerationRate.High, DataType.BirbaumSaunders, connectionId);
             request.ConnectionId = connectionId;
 
             var result = _sut.TestValidate(request);
@@ -30,7 +40,7 @@ namespace RealTimeCharts.Application.Test.Validators
         [Fact]
         public void ShouldReturError_WhenGenerationRateIsNotValid()
         {
-            var request = new Mock<GenerateDataRequest>().SetupAllProperties().Object;
+            var request = new GenerateDataRequest(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123");
 
             var result = _sut.TestValidate(request);
 

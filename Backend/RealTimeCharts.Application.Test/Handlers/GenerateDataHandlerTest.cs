@@ -20,7 +20,7 @@ namespace RealTimeCharts.Application.Test.Handlers
             => _sut = new GenerateDataHandler(_eventBus.Object, _logger.Object);
 
         [Fact]
-        public async Task Handler_ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()
+        public async Task Handle_ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()
         {
             var result = await _sut.Handle(Request, default);
 
@@ -28,13 +28,13 @@ namespace RealTimeCharts.Application.Test.Handlers
         }
 
         [Fact]
-        public async Task Handler_ShouldReturnSuccess_WhenReceivesRequest()
+        public async Task Handle_ShouldReturnSuccess_WhenReceivesRequest()
         {
             var result = await _sut.Handle(Request, default);
 
             Assert.True(result.IsSuccess);
         }
 
-        public static GenerateDataRequest Request { get => new Mock<GenerateDataRequest>().SetupAllProperties().Object; }
+        public static GenerateDataRequest Request { get => new(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123"); }
     }
 }
