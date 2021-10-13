@@ -17,7 +17,10 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
         private readonly ILogger<DataGenerationRequestedEventHandler> _logger;
         private readonly IDataGenerator _dataGenerator;
 
-        public DataGenerationRequestedEventHandler(IEventBus eventBus, ILogger<DataGenerationRequestedEventHandler> logger, IDataGenerator dataGenerator)
+        public DataGenerationRequestedEventHandler(
+            IEventBus eventBus, 
+            ILogger<DataGenerationRequestedEventHandler> logger, 
+            IDataGenerator dataGenerator)
         {
             _eventBus = eventBus;
             _logger = logger;

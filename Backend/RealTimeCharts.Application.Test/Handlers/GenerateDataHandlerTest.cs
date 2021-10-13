@@ -12,12 +12,16 @@ namespace RealTimeCharts.Application.Test.Handlers
 {
     public class GenerateDataHandlerTest
     {
-        private readonly Mock<IEventBus> _eventBus = new();
-        private readonly Mock<ILogger<GenerateDataHandler>> _logger = new();
+        private readonly Mock<IEventBus> _eventBus;
+        private readonly Mock<ILogger<GenerateDataHandler>> _logger;
         private readonly GenerateDataHandler _sut;
 
         public GenerateDataHandlerTest()
-            => _sut = new GenerateDataHandler(_eventBus.Object, _logger.Object);
+        {
+            _eventBus = new Mock<IEventBus>();
+            _logger = new Mock<ILogger<GenerateDataHandler>>();
+            _sut = new GenerateDataHandler(_eventBus.Object, _logger.Object);
+        }
 
         [Fact]
         public async Task Handle_ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()

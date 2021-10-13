@@ -13,7 +13,7 @@ namespace RealTimeCharts.Application.Data.Validators
                 .NotNull().WithMessage("Data Type must not be null or empty")
                 .Must(dataType => Enum.IsDefined(typeof(DataType), dataType)).WithMessage("Invalid data type");
 
-            RuleFor(request => request.Rate)
+            RuleFor(request => request.DataGenerationRate)
                 .NotNull().WithMessage("Data Generation Rate must not be null or empty")
                 .Must(dataType => Enum.IsDefined(typeof(DataGenerationRate), dataType)).WithMessage("Invalid data generation rate");
 

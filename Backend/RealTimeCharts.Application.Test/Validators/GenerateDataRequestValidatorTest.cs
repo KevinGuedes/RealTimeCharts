@@ -30,7 +30,6 @@ namespace RealTimeCharts.Application.Test.Validators
         public void ShouldReturError_WhenNotificationIdIsNullOrEmpty(string connectionId)
         {
             var request = new GenerateDataRequest(DataGenerationRate.High, DataType.BirbaumSaunders, connectionId);
-            request.ConnectionId = connectionId;
 
             var result = _sut.TestValidate(request);
 
@@ -40,11 +39,21 @@ namespace RealTimeCharts.Application.Test.Validators
         [Fact]
         public void ShouldReturError_WhenGenerationRateIsNotValid()
         {
-            var request = new GenerateDataRequest(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123");
+            var request = new GenerateDataRequest((DataGenerationRate)5, DataType.BirbaumSaunders, "abc-123");
 
             var result = _sut.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(request => request.Rate);
+            result.ShouldHaveValidationErrorFor(request => request.DataGenerationRate);
+        }
+
+        [Fact]
+        public void ShouldReturError_WhenDataTypeIsNotValid()
+        {
+            var request = new GenerateDataRequest(DataGenerationRate.High, (DataType)10, "abc-123");
+
+            var result = _sut.TestValidate(request);
+
+            result.ShouldHaveValidationErrorFor(request => request.DataType);
         }
     }
 }
