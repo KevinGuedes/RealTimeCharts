@@ -33,7 +33,7 @@ namespace RealTimeCharts.Application.Test.Validators
 
             var result = _sut.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(request => request.ConnectionId);
+            result.ShouldHaveValidationErrorFor(request => request.ConnectionId).WithErrorMessage("Connection Id with SignalR must not be null or empty");
         }
 
         [Fact]
@@ -45,6 +45,19 @@ namespace RealTimeCharts.Application.Test.Validators
 
             result.ShouldHaveValidationErrorFor(request => request.DataGenerationRate);
         }
+
+
+        //[Theory]
+        //[InlineData(null)]
+        //[InlineData("")]
+        //public void ShouldReturError_WhenGenerationRateIsNullOrEmpty(string dataGenerationRate)
+        //{
+        //    var request = new Mock<GenerateDataRequest>();
+
+        //    var result = _sut.TestValidate(request.Object);
+
+        //    result.ShouldHaveValidationErrorFor(request => request.DataGenerationRate);
+        //}
 
         [Fact]
         public void ShouldReturError_WhenDataTypeIsNotValid()
