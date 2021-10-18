@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,8 @@ namespace RealTimeCharts.Microservices.ClientDispatcher
                     services.AddEventBus(hostContext.Configuration);
                     services.AddSingleton<HubConnection>(sp => {
                         var logger = sp.GetService<ILogger<Program>>();
-                        return SignalRConnectionFactory.CreateHubConnection(hostContext, logger);
+                        var dataHubUrl = hostContext.Configuration.GetValue<string>("DataHubUrl");
+                        return SignalRConnectionFactory.CreateHubConnection(dataHubUrl, logger);
                     });
                     services.AddSingleton<IDispatcherService, DispatcherService>();
 
