@@ -48,7 +48,7 @@ export class SignalrService {
 
   private onDataReceived(): void {
     this._hubConnection.on("DataPointDispatched", (receivedData: string) => {
-      // console.log(receivedData);
+      console.log(receivedData);
       const dataPoint = new DataPoint(JSON.parse(receivedData));
       this.dataReceived.emit(dataPoint);
     })

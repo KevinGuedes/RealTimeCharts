@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace RealTimeCharts.Shared.Models
 {
@@ -12,7 +13,9 @@ namespace RealTimeCharts.Shared.Models
 
         public double Name { get; }
         public double Value { get; }
+        [JsonIgnore]
         public bool IsValid { get => !Double.IsNaN(Name) && !Double.IsNaN(Value); }
+
         public override string ToString() => $"({Name}, {Value})";
     }
 }
