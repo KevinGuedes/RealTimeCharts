@@ -9,7 +9,7 @@ namespace RealTimeCharts.Presentation.SignalR.Hubs
         public Task DataPointDispatched(string dataPointSerialized, string connectionId)
             => Clients.Client(connectionId).DataPointDispatched(dataPointSerialized, connectionId);
 
-        public Task DataGenerationFinishedNotificationDispatched(bool success, string connectionId)
-           => Clients.Client(connectionId).DataGenerationFinishedNotificationDispatched(success, connectionId);
+        public Task DataGenerationFinished(bool success, string connectionId)
+           => Clients.Client(connectionId).DataGenerationFinished(success, connectionId);
     }
 }

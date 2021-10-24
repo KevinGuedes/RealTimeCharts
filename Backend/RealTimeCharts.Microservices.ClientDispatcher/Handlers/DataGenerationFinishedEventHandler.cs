@@ -20,10 +20,6 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
         }
 
         public async Task<Result> Handle(DataGenerationFinishedEvent @event, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation($"Dispatching data generation finished notification to client with id {@event.ConnectionId}");
-            await _dispatcherService.DispatchDataGenerationFinishedNotification(@event.Success, @event.ConnectionId);
-            return Result.Success();
-        }
+            => await _dispatcherService.DispatchDataGenerationFinishedNotification(@event.Success, @event.ConnectionId);
     }
 }
