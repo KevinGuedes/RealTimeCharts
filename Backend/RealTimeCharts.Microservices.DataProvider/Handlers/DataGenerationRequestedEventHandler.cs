@@ -1,11 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using OperationResult;
 using RealTimeCharts.Infra.Bus.Interfaces;
-using RealTimeCharts.Microservices.DataProvider.Exceptions;
 using RealTimeCharts.Microservices.DataProvider.Interfaces;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Handlers;
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,13 +11,13 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
 {
     public class DataGenerationRequestedEventHandler : IEventHandler<DataGenerationRequestedEvent>
     {
-        private readonly IEventBus _eventBus;
         private readonly ILogger<DataGenerationRequestedEventHandler> _logger;
+        private readonly IEventBus _eventBus;
         private readonly IDataGenerator _dataGenerator;
 
         public DataGenerationRequestedEventHandler(
-            IEventBus eventBus, 
             ILogger<DataGenerationRequestedEventHandler> logger, 
+            IEventBus eventBus, 
             IDataGenerator dataGenerator)
         {
             _eventBus = eventBus;
@@ -46,7 +44,7 @@ namespace RealTimeCharts.Microservices.DataProvider.Handlers
                 _logger.LogInformation($"Publishing {@event.DataType} data generated event to dispatcher");
                 _eventBus.Publish(new DataGeneratedEvent(dataPoint, @event.ConnectionId));
 
-                Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.Rate));
+                Thread.Sleep(_dataGenerator.GetSleepTimeByGenerationRate(@event.DataGenerationRate));
             }
 
             _logger.LogInformation($"{@event.DataType} data successfully generated");

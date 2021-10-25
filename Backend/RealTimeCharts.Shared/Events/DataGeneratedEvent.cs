@@ -2,7 +2,7 @@
 
 namespace RealTimeCharts.Shared.Events
 {
-    public class DataGeneratedEvent : Event
+    public sealed class DataGeneratedEvent : Event
     {
         public DataGeneratedEvent(DataPoint dataPoint, string connectionId)
         {
