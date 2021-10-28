@@ -24,7 +24,7 @@ namespace RealTimeCharts.Application.Test.Handlers
         }
 
         [Fact]
-        public async Task Handle_ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()
+        public async Task ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()
         {
             var result = await _sut.Handle(Request, default);
 
@@ -32,7 +32,7 @@ namespace RealTimeCharts.Application.Test.Handlers
         }
 
         [Fact]
-        public async Task Handle_ShouldReturnSuccess_WhenReceivesRequest()
+        public async Task ShouldReturnSuccess_WhenReceivesRequest()
         {
             var result = await _sut.Handle(Request, default);
 
