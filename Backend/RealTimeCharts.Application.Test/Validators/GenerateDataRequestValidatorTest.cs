@@ -39,21 +39,21 @@ namespace RealTimeCharts.Application.Test.Validators
         [Fact]
         public void ShouldReturError_WhenGenerationRateIsNotValid()
         {
-            var request = new GenerateDataRequest((DataGenerationRate)99, DataType.BirbaumSaunders, "abc-123");
+            var request = new GenerateDataRequest((DataGenerationRate)(-1), DataType.BirbaumSaunders, "abc-123");
 
             var result = _sut.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(request => request.DataGenerationRate);
+            result.ShouldHaveValidationErrorFor(request => request.DataGenerationRate).WithErrorMessage("Invalid Data Generation Rate");
         }
 
         [Fact]
         public void ShouldReturError_WhenDataTypeIsNotValid()
         {
-            var request = new GenerateDataRequest(DataGenerationRate.High, (DataType)99, "abc-123");
+            var request = new GenerateDataRequest(DataGenerationRate.High, (DataType)(-1), "abc-123");
 
             var result = _sut.TestValidate(request);
 
-            result.ShouldHaveValidationErrorFor(request => request.DataType);
+            result.ShouldHaveValidationErrorFor(request => request.DataType).WithErrorMessage("Invalid Data Type");
         }
     }
 }

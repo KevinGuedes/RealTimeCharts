@@ -8,15 +8,21 @@ namespace RealTimeCharts.Microservices.DataProvider.Test
 {
     public class WorkerTest
     {
-        private Mock<IEventBus> _eventBus;
         private readonly Mock<ILogger<Worker>> _logger;
+        private Mock<IEventBus> _eventBus;
         private Worker _sut;
+
+        private Mock<IEventBus> _eventBusStrict;
+        private Worker _sutStrict;
 
         public WorkerTest()
         {
             _logger = new();
             _eventBus = new();
-            _sut = new Worker(_logger.Object, _eventBus.Object);
+            _sut = new(_logger.Object, _eventBus.Object);
+
+            _eventBusStrict = new(MockBehavior.Strict);
+            _sutStrict = new(_logger.Object, _eventBusStrict.Object);
         }
 
         [Fact]
@@ -24,22 +30,20 @@ namespace RealTimeCharts.Microservices.DataProvider.Test
         {
             _sut.StartAsync(default);
 
-            _eventBus.Verify(eb => eb.StartConsuming(), Times.Never);
+            _eventBus.Verify(eb => eb.StartConsuming(), Times.Once);
         }
 
         [Fact]
         public void ShouldStartToConsumeAfterSubscribedToEvent_WhenExecuted()
         {
             var sequence = new MockSequence();
-            _eventBus = new(MockBehavior.Strict);
-            _sut = new(_logger.Object, _eventBus.Object);
-            _eventBus.InSequence(sequence).Setup(eb => eb.SubscribeTo<DataGenerationRequestedEvent>());
-            _eventBus.InSequence(sequence).Setup(eb => eb.StartConsuming());
+            _eventBusStrict.InSequence(sequence).Setup(eb => eb.SubscribeTo<DataGenerationRequestedEvent>());
+            _eventBusStrict.InSequence(sequence).Setup(eb => eb.StartConsuming());
 
-            _sut.StartAsync(default);
+            _sutStrict.StartAsync(default);
 
-            _eventBus.Verify(eb => eb.SubscribeTo<DataGenerationRequestedEvent>());
-            _eventBus.Verify(eb => eb.StartConsuming());
+            _eventBusStrict.Verify(eb => eb.SubscribeTo<DataGenerationRequestedEvent>());
+            _eventBusStrict.Verify(eb => eb.StartConsuming());
         }
     }
 }

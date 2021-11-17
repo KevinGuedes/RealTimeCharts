@@ -10,14 +10,10 @@ namespace RealTimeCharts.Application.Data.Validators
         public GenerateDataRequestValidator()
         {
             RuleFor(request => request.DataType)
-                .IsInEnum().WithMessage("Invalid data type")
-                .NotNull().WithMessage("Data Type must not be null")
-                .NotEmpty().WithMessage("Data Type must not be empty");
+                .IsInEnum().WithMessage("Invalid Data Type");
 
             RuleFor(request => request.DataGenerationRate)
-                .IsInEnum().WithMessage("Invalid data generation rate")
-                .NotNull().WithMessage("Data Generation Rate must not be null")
-                .NotEmpty().WithMessage("Data Generation Rate must not be empty");
+                .IsInEnum().WithMessage("Invalid Data Generation Rate");
 
             RuleFor(request => request.ConnectionId)
                 .NotNull().WithMessage("Connection Id with SignalR must not be null")
