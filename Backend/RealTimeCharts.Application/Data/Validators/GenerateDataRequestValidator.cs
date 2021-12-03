@@ -1,7 +1,5 @@
 ﻿using FluentValidation;
 using RealTimeCharts.Application.Data.Requests;
-using RealTimeCharts.Shared.Enums;
-using System;
 
 namespace RealTimeCharts.Application.Data.Validators
 {
