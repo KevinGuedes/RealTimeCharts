@@ -6,6 +6,7 @@ using OperationResult;
 using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
 using RealTimeCharts.Shared.Models;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Services
@@ -21,18 +22,18 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Services
             _hubConnection = hubConnection;
         }
 
-        public async Task<Result> DispatchData(DataPoint dataPoint, string connectionId)
+        public async Task<Result> DispatchData(DataPoint dataPoint, string connectionId, CancellationToken cancellationToken)
             => await TryToDisptach(async () =>
                  {
                      _logger.LogInformation($"Dispatching data generation finished notification to client with id {connectionId}");
-                     await _hubConnection.InvokeAsync("DataPointDispatched", SerializeObject(dataPoint), connectionId);
+                     await _hubConnection.InvokeAsync("DataPointDispatched", SerializeObject(dataPoint), connectionId, cancellationToken);
                  });
 
-        public async Task<Result> DispatchDataGenerationFinishedNotification(bool success, string connectionId)
+        public async Task<Result> DispatchDataGenerationFinishedNotification(bool success, string connectionId, CancellationToken cancellationToken)
             => await TryToDisptach(async () =>
                 {
                     _logger.LogInformation($"Dispatching data generation finished notification to client with id {connectionId}");
-                    await _hubConnection.InvokeAsync("DataGenerationFinished", success, connectionId);
+                    await _hubConnection.InvokeAsync("DataGenerationFinished", success, connectionId, cancellationToken);
                 });
 
         private async Task<Result> TryToDisptach(Func<Task> dispatch)

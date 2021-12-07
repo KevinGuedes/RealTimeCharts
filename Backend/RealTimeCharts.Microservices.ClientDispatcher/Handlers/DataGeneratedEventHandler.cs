@@ -20,6 +20,6 @@ namespace RealTimeCharts.Microservices.ClientDispatcher.Handlers
         }
 
         public async Task<Result> Handle(DataGeneratedEvent @event, CancellationToken cancellationToken)
-            => await _dispatcherService.DispatchData(@event.DataPoint, @event.ConnectionId);
+            => await _dispatcherService.DispatchData(@event.DataPoint, @event.ConnectionId, cancellationToken);
     }
 }
