@@ -12,7 +12,7 @@ namespace RealTimeCharts.Application.Test.Validators
         private readonly GenerateDataRequestValidator _sut;
 
         public GenerateDataRequestValidatorTest()
-            => _sut = new GenerateDataRequestValidator();
+            => _sut = new();
 
         [Fact]
         public void ShouldNotReturnError_WhenRequestIsValid()

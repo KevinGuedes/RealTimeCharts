@@ -15,30 +15,35 @@ namespace RealTimeCharts.Application.Test.Handlers
         private readonly Mock<IEventBus> _eventBus;
         private readonly Mock<ILogger<GenerateDataHandler>> _logger;
         private readonly GenerateDataHandler _sut;
+        private readonly GenerateDataRequest _request;
 
         public GenerateDataHandlerTest()
         {
-            _eventBus = new Mock<IEventBus>();
-            _logger = new Mock<ILogger<GenerateDataHandler>>();
-            _sut = new GenerateDataHandler(_eventBus.Object, _logger.Object);
+            _eventBus = new();
+            _logger = new();
+            _sut = new(_eventBus.Object, _logger.Object);
+            _request = new(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123");
         }
 
         [Fact]
         public async Task ShouldPublishDataGenerationRequestedEvent_WhenReceivesRequest()
         {
-            var result = await _sut.Handle(Request, default);
+            var result = await _sut.Handle(_request, default);
 
-            _eventBus.Verify(eb => eb.Publish(It.IsAny<DataGenerationRequestedEvent>()), Times.Once());
+            _eventBus.Verify(eb => eb.Publish(It.Is<DataGenerationRequestedEvent>(
+                e => 
+                    e.DataType == _request.DataType &&
+                    e.ConnectionId == _request.ConnectionId &&
+                    e.DataGenerationRate == _request.DataGenerationRate)), 
+                Times.Once);
         }
 
         [Fact]
         public async Task ShouldReturnSuccess_WhenReceivesRequest()
         {
-            var result = await _sut.Handle(Request, default);
+            var result = await _sut.Handle(_request, default);
 
             Assert.True(result.IsSuccess);
         }
-
-        public static GenerateDataRequest Request { get => new(DataGenerationRate.High, DataType.BirbaumSaunders, "abc-123"); }
     }
 }

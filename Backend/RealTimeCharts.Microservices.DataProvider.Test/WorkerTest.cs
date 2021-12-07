@@ -9,11 +9,11 @@ namespace RealTimeCharts.Microservices.DataProvider.Test
     public class WorkerTest
     {
         private readonly Mock<ILogger<Worker>> _logger;
-        private Mock<IEventBus> _eventBus;
-        private Worker _sut;
+        private readonly Mock<IEventBus> _eventBus;
+        private readonly Worker _sut;
 
-        private Mock<IEventBus> _eventBusStrict;
-        private Worker _sutStrict;
+        private readonly Mock<IEventBus> _eventBusStrict;
+        private readonly Worker _sutStrict;
 
         public WorkerTest()
         {
