@@ -6,9 +6,6 @@ using RealTimeCharts.Microservices.ClientDispatcher.Interfaces;
 using RealTimeCharts.Shared.Events;
 using RealTimeCharts.Shared.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 

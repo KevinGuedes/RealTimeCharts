@@ -47,7 +47,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealTimeCharts.Application.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealTimeCharts.Microservices.DataProvider.Test", "RealTimeCharts.Microservices.DataProvider.Test\RealTimeCharts.Microservices.DataProvider.Test.csproj", "{66C71E89-8B44-4E79-9684-DF591A616EC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeCharts.Microservices.ClientDispatcher.Test", "RealTimeCharts.Microservices.ClientDispatcher.Test\RealTimeCharts.Microservices.ClientDispatcher.Test.csproj", "{C5198C61-371B-4B57-8140-F7C753D213ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RealTimeCharts.Microservices.ClientDispatcher.Test", "RealTimeCharts.Microservices.ClientDispatcher.Test\RealTimeCharts.Microservices.ClientDispatcher.Test.csproj", "{C5198C61-371B-4B57-8140-F7C753D213ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RealTimeCharts.Shared.Test", "RealTimeCharts.Shared.Test\RealTimeCharts.Shared.Test.csproj", "{1BAD7D69-7AAA-4730-AB9E-B725D482FA37}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,6 +101,10 @@ Global
 		{C5198C61-371B-4B57-8140-F7C753D213ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5198C61-371B-4B57-8140-F7C753D213ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5198C61-371B-4B57-8140-F7C753D213ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BAD7D69-7AAA-4730-AB9E-B725D482FA37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BAD7D69-7AAA-4730-AB9E-B725D482FA37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BAD7D69-7AAA-4730-AB9E-B725D482FA37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BAD7D69-7AAA-4730-AB9E-B725D482FA37}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,6 +127,7 @@ Global
 		{4B61C3FC-20E9-4001-91F9-5D559A1AD13F} = {0CCF6B99-F64C-496B-944C-171A6818AB25}
 		{66C71E89-8B44-4E79-9684-DF591A616EC8} = {0CCF6B99-F64C-496B-944C-171A6818AB25}
 		{C5198C61-371B-4B57-8140-F7C753D213ED} = {0CCF6B99-F64C-496B-944C-171A6818AB25}
+		{1BAD7D69-7AAA-4730-AB9E-B725D482FA37} = {0CCF6B99-F64C-496B-944C-171A6818AB25}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {84AF3B9A-B4BF-441A-BCE2-1D7B1C0FECEA}
