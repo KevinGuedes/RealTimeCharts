@@ -7,10 +7,10 @@ namespace RealTimeCharts.Presentation.SignalR.Hubs
 {
     public class DataHub : Hub<IDataHub>, IDataHub
     {
-        public Task DataPointDispatched(string dataPointSerialized, string connectionId, CancellationToken cancellationToken)
-            => Clients.Client(connectionId).DataPointDispatched(dataPointSerialized, connectionId, cancellationToken);
+        public Task DataPointDispatched(string dataPointSerialized, string connectionId)
+            => Clients.Client(connectionId).DataPointDispatched(dataPointSerialized, connectionId);
 
-        public Task DataGenerationFinished(bool success, string connectionId, CancellationToken cancellationToken)
-           => Clients.Client(connectionId).DataGenerationFinished(success, connectionId, cancellationToken);
+        public Task DataGenerationFinished(bool success, string connectionId)
+           => Clients.Client(connectionId).DataGenerationFinished(success, connectionId);
     }
 }
