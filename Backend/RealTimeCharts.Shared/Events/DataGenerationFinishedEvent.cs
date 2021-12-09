@@ -1,6 +1,6 @@
 ﻿namespace RealTimeCharts.Shared.Events
 {
-    public class DataGenerationFinishedEvent : Event
+    public sealed class DataGenerationFinishedEvent : Event
     {
         public DataGenerationFinishedEvent(string connectionId, bool success)
         {

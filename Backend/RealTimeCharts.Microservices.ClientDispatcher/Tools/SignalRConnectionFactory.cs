@@ -1,18 +1,15 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 using System;
 
 namespace RealTimeCharts.Microservices.ClientDispatcher.Tools
 {
     public static class SignalRConnectionFactory
     {
-        public static HubConnection CreateHubConnection(HostBuilderContext hostContext, ILogger<Program> logger)
+        public static HubConnection CreateHubConnection(string dataHubUrl, ILogger<Program> logger)
         {
             var connection = new HubConnectionBuilder()
-                .WithUrl(new Uri(hostContext.Configuration.GetValue<string>("DataHubUrl")))
+                .WithUrl(new Uri(dataHubUrl))
                 .Build();
             
             connection.Closed += async error => {

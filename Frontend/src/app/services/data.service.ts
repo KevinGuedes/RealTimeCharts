@@ -14,7 +14,7 @@ import { DataTypeName } from '../models/data-type-name.enum';
 })
 export class DataService {
 
-  private _apiUrl: string = environment.dataApiUrl;
+  private readonly _apiUrl: string = environment.dataApiUrl;
 
   constructor(
     private readonly _http: HttpClient,

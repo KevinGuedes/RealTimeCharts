@@ -23,7 +23,7 @@ namespace RealTimeCharts.Application.Data.Handlers
         public Task<Result> Handle(GenerateDataRequest request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Data generation started");
-            _eventBus.Publish(new DataGenerationRequestedEvent(request.Rate, request.DataType, request.ConnectionId));
+            _eventBus.Publish(new DataGenerationRequestedEvent(request.DataGenerationRate, request.DataType, request.ConnectionId));
             return Result.Success();
         }
     }

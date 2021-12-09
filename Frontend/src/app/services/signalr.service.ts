@@ -54,7 +54,7 @@ export class SignalrService {
   }
 
   private onDataGenerationFinished(): void {
-    this._hubConnection.on("DataGenerationFinishedNotificationDispatched", (success: boolean) => {
+    this._hubConnection.on("DataGenerationFinished", (success: boolean) => {
       this.dataGenerationFinished.emit(success);
     })
   }

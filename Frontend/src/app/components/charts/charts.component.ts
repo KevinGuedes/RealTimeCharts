@@ -91,7 +91,7 @@ export class ChartsComponent implements OnInit {
 
   private pushData(dataPoint: DataPoint): void {
     let currentSerieIndex = this.data.length - 1;
-    this.data[currentSerieIndex].series.push({ "name": dataPoint.Name, "value": dataPoint.Value })
+    this.data[currentSerieIndex].series.push({ "name": dataPoint.name, "value": dataPoint.value })
     this.data = [...this.data];
   }
 
