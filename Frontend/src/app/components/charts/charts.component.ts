@@ -116,7 +116,7 @@ export class ChartsComponent implements OnInit {
     this.dataTypeNameInProcess = this.dataTypeNameByKey(this.dataForm.value.type);
     this.data.push({ name: this.dataTypeNameInProcess, series: [] })
 
-    if (this.dataForm.value.type == 'Heart')
+    if (this.dataForm.value.type == DataTypeName.Heart)
       this.appendColorsToColorSchemes('#eb4646');
     else
       this.appendColorsToColorSchemes();
@@ -127,8 +127,8 @@ export class ChartsComponent implements OnInit {
   }
 
   public clearData(): void {
-    this.colorSchemeLine.domain = new Array<string>();
-    this.colorSchemePolar.domain = new Array<string>();
+    this.colorSchemeLine.domain = [];
+    this.colorSchemePolar.domain = [];
     this.data = []
     this.dataCounter = 0;
   }
